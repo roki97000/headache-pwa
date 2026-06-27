@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2a78d6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="頭痛記録">
+<title>頭痛記録</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f7fa;
+  --surface:#ffffff;
+  --border:#e2e5eb;
+  --border-strong:#c8cdd7;
+  --text:#1a1d23;
+  --text-sub:#52576a;
+  --text-muted:#8a90a0;
+  --accent:#2a78d6;
+  --accent-bg:#e8f1fb;
+  --accent-text:#1a5aad;
+  --danger:#c0392b;
+  --danger-bg:#fdf0ef;
+  --warning-bg:#fdf5e0;
+  --warning-text:#7a5200;
+  --success-bg:#edf7ee;
+  --success-text:#1e6e2e;
+  --radius:10px;
+  --shadow:0 1px 4px rgba(0,0,0,0.08);
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#111318;
+    --surface:#1e2128;
+    --border:#2e333d;
+    --border-strong:#3e4452;
+    --text:#e8eaf0;
+    --text-sub:#9099af;
+    --text-muted:#5a6070;
+    --accent:#4a94f0;
+    --accent-bg:#162440;
+    --accent-text:#80b8f8;
+    --danger:#e05a4e;
+    --danger-bg:#2a1512;
+    --warning-bg:#2a2010;
+    --warning-text:#e0b040;
+    --success-bg:#102214;
+    --success-text:#4db86a;
+  }
+}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Hiragino Kaku Gothic ProN',Meiryo,sans-serif;background:var(--bg);color:var(--text);font-size:16px;-webkit-font-smoothing:antialiased}
+
+/* layout */
+.app{max-width:480px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;padding-bottom:72px}
+.content{flex:1;padding:16px}
+
+/* bottom nav */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:0.5px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 0;border:none;background:transparent;color:var(--text-muted);cursor:pointer;font-size:10px;font-family:inherit;transition:color 0.15s}
+.nav-btn i{font-size:22px}
+.nav-btn.active{color:var(--accent)}
+
+/* screens */
+.screen{display:none}.screen.active{display:block}
+
+/* cards */
+.card{background:var(--surface);border:0.5px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
+
+/* section label */
+.sect{font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px}
+
+/* pressure */
+.pressure-row{display:flex;align-items:center;gap:12px}
+.pressure-num{font-size:36px;font-weight:600;letter-spacing:-1px;color:var(--text);line-height:1}
+.pressure-unit{font-size:13px;color:var(--text-muted);margin-top:4px}
+.trend-badge{font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;margin-left:auto}
+.trend-up{background:var(--warning-bg);color:var(--warning-text)}
+.trend-down{background:var(--danger-bg);color:var(--danger)}
+.trend-stable{background:var(--success-bg);color:var(--success-text)}
+.pressure-meta{font-size:11px;color:var(--text-muted);margin-top:6px}
+.geo-status{font-size:11px;color:var(--text-muted);margin-top:4px;display:flex;align-items:center;gap:4px}
+/* weather */
+.weather-row{display:flex;align-items:center;gap:16px;margin-top:12px;padding-top:12px;border-top:0.5px solid var(--border)}
+.weather-icon{font-size:32px;line-height:1}
+.weather-temp{font-size:26px;font-weight:600;letter-spacing:-0.5px;color:var(--text)}
+.weather-temp-unit{font-size:14px;color:var(--text-muted)}
+.weather-desc{font-size:13px;color:var(--text-sub);margin-top:2px}
+
+/* pain scale */
+.pain-grid{display:grid;grid-template-columns:repeat(11,1fr);gap:4px;margin-top:8px}
+.pain-btn{aspect-ratio:1;border:0.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);color:var(--text-sub);transition:all 0.12s;-webkit-tap-highlight-color:transparent}
+.pain-btn:active{transform:scale(0.92)}
+.pain-btn.sel{background:var(--accent-bg);border-color:var(--accent);color:var(--accent);font-weight:700}
+.pain-hint{font-size:12px;color:var(--text-muted);margin-top:6px;min-height:18px}
+
+/* toggle chips */
+.chip-grid{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.chip{padding:7px 14px;border:0.5px solid var(--border);border-radius:20px;font-size:13px;cursor:pointer;background:var(--bg);color:var(--text-sub);transition:all 0.12s;-webkit-tap-highlight-color:transparent;white-space:nowrap}
+.chip:active{transform:scale(0.95)}
+.chip.sel{background:var(--accent-bg);border-color:var(--accent);color:var(--accent);font-weight:500}
+
+/* meds */
+.med-list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.med-row{display:flex;align-items:center;gap:8px}
+.med-name{flex:1;font-size:14px;font-weight:500}
+.med-check{width:22px;height:22px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
+.med-dose{width:100px;padding:6px 8px;font-size:13px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface);color:var(--text);font-family:inherit}
+.med-dose:focus{outline:none;border-color:var(--accent)}
+.med-dose:disabled{opacity:0.4}
+
+/* memo */
+textarea{width:100%;padding:10px;font-size:14px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface);color:var(--text);font-family:inherit;resize:none;line-height:1.5}
+textarea:focus{outline:none;border-color:var(--accent)}
+
+/* submit */
+.save-btn{width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity 0.15s;margin-top:4px}
+.save-btn:active{opacity:0.85}
+
+/* log items */
+.log-item{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:start;padding:12px 0;border-bottom:0.5px solid var(--border)}
+.log-item:last-child{border-bottom:none}
+.score-circle{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0}
+.sc-0,.sc-1,.sc-2,.sc-3{background:var(--success-bg);color:var(--success-text)}
+.sc-4,.sc-5,.sc-6{background:var(--warning-bg);color:var(--warning-text)}
+.sc-7,.sc-8,.sc-9,.sc-10{background:var(--danger-bg);color:var(--danger)}
+.log-date{font-size:11px;color:var(--text-muted)}
+.log-detail{font-size:13px;color:var(--text-sub);margin-top:2px;line-height:1.5}
+.log-memo{font-size:12px;color:var(--text-muted);margin-top:2px}
+.del-btn{border:none;background:none;color:var(--text-muted);cursor:pointer;padding:4px;font-size:18px;line-height:1}
+.del-btn:active{color:var(--danger)}
+
+/* form label */
+.flabel{display:block;font-size:13px;font-weight:600;color:var(--text-sub);margin-bottom:4px}
+.form-block{margin-bottom:16px}
+
+/* chart wrapper */
+.chart-wrap{position:relative;width:100%}
+
+/* empty */
+.empty{text-align:center;padding:40px 0;color:var(--text-muted);font-size:14px}
+.empty i{font-size:40px;display:block;margin-bottom:8px;opacity:0.4}
+
+/* settings */
+.settings-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:0.5px solid var(--border)}
+.settings-row:last-child{border-bottom:none}
+.settings-label{font-size:14px}
+.settings-sub{font-size:12px;color:var(--text-muted);margin-top:2px}
+.settings-btn{padding:7px 14px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text-sub);font-size:13px;cursor:pointer;font-family:inherit}
+.danger-btn{border-color:var(--danger);color:var(--danger);background:var(--danger-bg)}
+
+/* toast */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(10px);background:rgba(20,22,28,0.92);color:#fff;padding:10px 20px;border-radius:20px;font-size:14px;opacity:0;transition:all 0.25s;pointer-events:none;z-index:999;white-space:nowrap;backdrop-filter:blur(8px)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* header */
+.header{padding:16px 16px 0;display:flex;align-items:center;justify-content:space-between}
+.header h1{font-size:18px;font-weight:700}
+.header-sub{font-size:12px;color:var(--text-muted)}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <div>
+      <h1>頭痛記録</h1>
+      <div class="header-sub" id="today-date"></div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ===== 記録 ===== -->
+    <div id="screen-record" class="screen active">
+
+      <!-- 気圧・天気カード -->
+      <div class="card">
+        <div class="sect">現在の気象</div>
+        <div class="pressure-row">
+          <div>
+            <div class="pressure-num" id="p-val">--</div>
+            <div class="pressure-unit">hPa</div>
+          </div>
+          <div id="p-trend"></div>
+        </div>
+        <div class="pressure-meta" id="p-time"></div>
+        <div class="geo-status" id="geo-status"><i class="ti ti-map-pin" style="font-size:13px"></i><span id="geo-text">位置情報を取得中…</span></div>
+        <div class="weather-row" id="weather-row" style="display:none">
+          <div class="weather-icon" id="w-icon">--</div>
+          <div>
+            <div style="display:flex;align-items:baseline;gap:4px">
+              <div class="weather-temp" id="w-temp">--</div>
+              <div class="weather-temp-unit">°C</div>
+            </div>
+            <div class="weather-desc" id="w-desc"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 頭痛スコア -->
+      <div class="card">
+        <div class="form-block">
+          <div class="flabel">頭痛の強さ（0 なし → 10 最強）</div>
+          <div class="pain-grid" id="pain-grid"></div>
+          <div class="pain-hint" id="pain-hint">タップして選択してください</div>
+        </div>
+
+        <div class="form-block">
+          <div class="flabel">頭痛の種類</div>
+          <div class="chip-grid" id="type-chips">
+            <button class="chip" data-group="type" data-val="脈打つ痛み">脈打つ痛み</button>
+            <button class="chip" data-group="type" data-val="重い">重い</button>
+            <button class="chip" data-group="type" data-val="刺すような痛み">刺すような痛み</button>
+            <button class="chip" data-group="type" data-val="その他">その他</button>
+          </div>
+        </div>
+
+        <div class="form-block">
+          <div class="flabel">痛みの部位</div>
+          <div class="chip-grid" id="loc-chips">
+            <button class="chip" data-group="loc" data-val="前頭部">前頭部</button>
+            <button class="chip" data-group="loc" data-val="側頭部（右）">側頭部（右）</button>
+            <button class="chip" data-group="loc" data-val="側頭部（左）">側頭部（左）</button>
+            <button class="chip" data-group="loc" data-val="後頭部">後頭部</button>
+            <button class="chip" data-group="loc" data-val="目の奥">目の奥</button>
+            <button class="chip" data-group="loc" data-val="首筋">首筋</button>
+            <button class="chip" data-group="loc" data-val="全体">全体</button>
+            <button class="chip" data-group="loc" data-val="その他">その他</button>
+          </div>
+        </div>
+
+        <div class="form-block">
+          <div class="flabel">服薬</div>
+          <div class="med-list">
+            <div class="med-row">
+              <input type="checkbox" class="med-check" id="med0" onchange="toggleDose(0)">
+              <label class="med-name" for="med0">ゾルミトリプタン</label>
+              <input type="text" class="med-dose" id="dose0" placeholder="用量・回数" disabled>
+            </div>
+            <div class="med-row">
+              <input type="checkbox" class="med-check" id="med1" onchange="toggleDose(1)">
+              <label class="med-name" for="med1">ロキソプロフェン</label>
+              <input type="text" class="med-dose" id="dose1" placeholder="用量・回数" disabled>
+            </div>
+            <div class="med-row">
+              <input type="checkbox" class="med-check" id="med2" onchange="toggleDose(2)">
+              <label class="med-name" for="med2">レバミピド</label>
+              <input type="text" class="med-dose" id="dose2" placeholder="用量・回数" disabled>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-block">
+          <div class="flabel">メモ</div>
+          <textarea id="memo" rows="2" placeholder="天気・体調・前兆など自由に"></textarea>
+        </div>
+
+        <button class="save-btn" onclick="saveRecord()"><i class="ti ti-check" style="vertical-align:-2px"></i> 記録する</button>
+      </div>
+    </div>
+
+    <!-- ===== グラフ ===== -->
+    <div id="screen-chart" class="screen">
+      <div class="card">
+        <div class="sect">気圧と頭痛スコア（直近14日）</div>
+        <div class="chart-wrap" style="height:240px">
+          <canvas id="mainChart" role="img" aria-label="気圧と頭痛スコアの折れ線グラフ">気圧と頭痛スコアの推移</canvas>
+        </div>
+        <div style="display:flex;gap:16px;margin-top:10px;font-size:12px;color:var(--text-muted)">
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:3px;background:#2a78d6;border-radius:2px;display:inline-block"></span>気圧 (hPa)</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:3px;background:#e34948;border-radius:2px;border-top:2px dashed #e34948;display:inline-block"></span>頭痛スコア</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="sect">服薬回数（過去30日）</div>
+        <div class="chart-wrap" style="height:160px">
+          <canvas id="medChart" role="img" aria-label="服薬回数の棒グラフ">服薬回数</canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 履歴 ===== -->
+    <div id="screen-log" class="screen">
+      <div class="card">
+        <div class="sect">記録一覧</div>
+        <div id="log-list"><div class="empty"><i class="ti ti-clipboard-text"></i>まだ記録がありません</div></div>
+      </div>
+    </div>
+
+    <!-- ===== 設定 ===== -->
+    <div id="screen-settings" class="screen">
+      <div class="card">
+        <div class="sect">データ管理</div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-label">CSVエクスポート</div>
+            <div class="settings-sub">全記録をダウンロード</div>
+          </div>
+          <button class="settings-btn" onclick="exportCSV()"><i class="ti ti-download" style="vertical-align:-2px"></i> 書き出し</button>
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-label">全データを削除</div>
+            <div class="settings-sub" id="record-count"></div>
+          </div>
+          <button class="settings-btn danger-btn" onclick="clearData()"><i class="ti ti-trash" style="vertical-align:-2px"></i> 削除</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="sect">このアプリについて</div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-label">気圧データ提供</div>
+            <div class="settings-sub">Open-Meteo（無料・登録不要）</div>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-label">データ保存場所</div>
+            <div class="settings-sub">このデバイスのみ（サーバー送信なし）</div>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-label">バージョン</div>
+            <div class="settings-sub">1.0.0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /app -->
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" onclick="showTab('record',this)"><i class="ti ti-edit"></i>記録</button>
+  <button class="nav-btn" onclick="showTab('chart',this)"><i class="ti ti-chart-line"></i>グラフ</button>
+  <button class="nav-btn" onclick="showTab('log',this)"><i class="ti ti-list"></i>履歴</button>
+  <button class="nav-btn" onclick="showTab('settings',this)"><i class="ti ti-settings"></i>設定</button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== State =====
+const MEDS = ['ゾルミトリプタン','ロキソプロフェン','レバミピド'];
+const PAIN_LABELS = ['なし','ごく軽微','軽度','軽〜中','中程度','中程度','中〜強','強い','かなり強い','非常に強い','最強'];
+let state = { pain: null, type: null, loc: null };
+let records = JSON.parse(localStorage.getItem('ht_records') || '[]');
+let currentPressure = null;
+let geoCoords = null;
+let charts = {};
+
+// ===== Init =====
+document.getElementById('today-date').textContent = new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
+buildPainGrid();
+requestGeoAndPressure();
+setInterval(requestGeoAndPressure, 600000);
+updateRecordCount();
+
+// ===== Geo + Pressure =====
+function requestGeoAndPressure() {
+  if (!navigator.geolocation) {
+    document.getElementById('geo-text').textContent = '位置情報非対応 — 岡崎市の気圧を使用';
+    fetchPressure(34.9565, 137.1651, '岡崎市（デフォルト）');
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const { latitude: lat, longitude: lon } = pos.coords;
+      geoCoords = { lat, lon };
+      reverseGeocode(lat, lon);
+      fetchPressure(lat, lon, null);
+    },
+    err => {
+      document.getElementById('geo-text').textContent = '位置情報取得失敗 — 岡崎市の気圧を使用';
+      fetchPressure(34.9565, 137.1651, '岡崎市（デフォルト）');
+    },
+    { timeout: 8000, maximumAge: 300000 }
+  );
+}
+
+async function reverseGeocode(lat, lon) {
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=ja`);
+    const d = await r.json();
+    const city = d.address?.city || d.address?.town || d.address?.village || d.address?.county || '現在地';
+    document.getElementById('geo-text').textContent = city;
+  } catch {
+    document.getElementById('geo-text').textContent = `${lat.toFixed(2)}, ${lon.toFixed(2)}`;
+  }
+}
+
+async function fetchPressure(lat, lon, label) {
+  if (label) document.getElementById('geo-text').textContent = label;
+  try {
+    const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=surface_pressure,temperature_2m,weather_code&timezone=Asia%2FTokyo`);
+    const d = await r.json();
+    const p = Math.round(d.current.surface_pressure * 10) / 10;
+    currentPressure = p;
+    document.getElementById('p-val').textContent = p;
+    document.getElementById('p-time').textContent = '取得: ' + new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+    renderTrend(p);
+    // 天気・気温
+    const temp = Math.round(d.current.temperature_2m * 10) / 10;
+    const wcode = d.current.weather_code;
+    const { icon, desc } = weatherInfo(wcode);
+    document.getElementById('w-temp').textContent = temp;
+    document.getElementById('w-icon').textContent = icon;
+    document.getElementById('w-desc').textContent = desc;
+    document.getElementById('weather-row').style.display = 'flex';
+  } catch {
+    document.getElementById('p-val').textContent = '--';
+    document.getElementById('p-time').textContent = '取得失敗';
+  }
+}
+
+function weatherInfo(code) {
+  if (code === 0)                       return { icon: '☀️', desc: '快晴' };
+  if (code === 1)                       return { icon: '🌤️', desc: 'ほぼ晴れ' };
+  if (code === 2)                       return { icon: '⛅', desc: '晴れ時々曇り' };
+  if (code === 3)                       return { icon: '☁️', desc: '曇り' };
+  if (code >= 45 && code <= 48)         return { icon: '🌫️', desc: '霧' };
+  if (code >= 51 && code <= 55)         return { icon: '🌦️', desc: '霧雨' };
+  if (code >= 61 && code <= 65)         return { icon: '🌧️', desc: '雨' };
+  if (code >= 66 && code <= 67)         return { icon: '🌨️', desc: '雨雪（着氷性）' };
+  if (code >= 71 && code <= 75)         return { icon: '❄️', desc: '雪' };
+  if (code === 77)                      return { icon: '🌨️', desc: '霧雪' };
+  if (code >= 80 && code <= 82)         return { icon: '🌦️', desc: 'にわか雨' };
+  if (code >= 85 && code <= 86)         return { icon: '🌨️', desc: 'にわか雪' };
+  if (code >= 95 && code <= 99)         return { icon: '⛈️', desc: '雷雨' };
+  return { icon: '🌡️', desc: `天気コード ${code}` };
+}
+
+function renderTrend(p) {
+  const prev = records.length ? records[records.length-1]?.pressure : null;
+  let cls = 'trend-stable', icon = '→', label = '安定';
+  if (prev) {
+    const diff = p - prev;
+    if (diff > 1) { cls='trend-up'; icon='↑'; label=`+${diff.toFixed(1)} hPa上昇`; }
+    else if (diff < -1) { cls='trend-down'; icon='↓'; label=`${diff.toFixed(1)} hPa低下`; }
+  }
+  document.getElementById('p-trend').innerHTML = `<span class="trend-badge ${cls}">${icon} ${label}</span>`;
+}
+
+// ===== Pain Grid =====
+function buildPainGrid() {
+  const g = document.getElementById('pain-grid');
+  for (let i = 0; i <= 10; i++) {
+    const b = document.createElement('button');
+    b.className = 'pain-btn'; b.textContent = i;
+    b.onclick = () => {
+      document.querySelectorAll('.pain-btn').forEach(x=>x.classList.remove('sel'));
+      b.classList.add('sel');
+      state.pain = i;
+      document.getElementById('pain-hint').textContent = `${i} / 10 — ${PAIN_LABELS[i]}`;
+    };
+    g.appendChild(b);
+  }
+}
+
+// ===== Chips =====
+document.addEventListener('click', e => {
+  const c = e.target.closest('.chip[data-group]');
+  if (!c) return;
+  const g = c.dataset.group;
+  document.querySelectorAll(`.chip[data-group="${g}"]`).forEach(x=>x.classList.remove('sel'));
+  c.classList.add('sel');
+  if (g==='type') state.type = c.dataset.val;
+  if (g==='loc') state.loc = c.dataset.val;
+});
+
+// ===== Meds =====
+function toggleDose(i) {
+  const cb = document.getElementById('med'+i);
+  const inp = document.getElementById('dose'+i);
+  inp.disabled = !cb.checked;
+  if (!cb.checked) inp.value = '';
+}
+
+// ===== Save =====
+function saveRecord() {
+  if (state.pain === null) { showToast('頭痛スコアを選択してください'); return; }
+  const meds = [];
+  for (let i = 0; i < 3; i++) {
+    const cb = document.getElementById('med'+i);
+    if (cb.checked) meds.push({ name: MEDS[i], dose: document.getElementById('dose'+i).value });
+  }
+  const rec = {
+    id: Date.now(),
+    datetime: new Date().toISOString(),
+    pressure: currentPressure,
+    lat: geoCoords?.lat ?? null,
+    lon: geoCoords?.lon ?? null,
+    pain: state.pain,
+    type: state.type,
+    loc: state.loc,
+    meds,
+    memo: document.getElementById('memo').value.trim()
+  };
+  records.push(rec);
+  localStorage.setItem('ht_records', JSON.stringify(records));
+  showToast('記録しました');
+  resetForm();
+  updateRecordCount();
+}
+
+function resetForm() {
+  state = { pain: null, type: null, loc: null };
+  document.querySelectorAll('.pain-btn').forEach(b=>b.classList.remove('sel'));
+  document.getElementById('pain-hint').textContent = 'タップして選択してください';
+  document.querySelectorAll('.chip').forEach(b=>b.classList.remove('sel'));
+  for (let i = 0; i < 3; i++) {
+    document.getElementById('med'+i).checked = false;
+    document.getElementById('dose'+i).value = '';
+    document.getElementById('dose'+i).disabled = true;
+  }
+  document.getElementById('memo').value = '';
+}
+
+// ===== Tab =====
+function showTab(t, btn) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+t).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (t==='chart') renderCharts();
+  if (t==='log') renderLog();
+  if (t==='settings') updateRecordCount();
+}
+
+// ===== Charts =====
+function renderCharts() {
+  const recent = records.slice(-14);
+  const labels = recent.map(r => new Date(r.datetime).toLocaleDateString('ja-JP',{month:'numeric',day:'numeric'}));
+  const pressures = recent.map(r => r.pressure ?? null);
+  const pains = recent.map(r => r.pain);
+
+  if (charts.main) charts.main.destroy();
+  charts.main = new Chart(document.getElementById('mainChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label:'気圧', data:pressures, borderColor:'#2a78d6', backgroundColor:'rgba(42,120,214,0.06)', borderWidth:2, tension:0.35, yAxisID:'y1', pointRadius:4, pointBackgroundColor:'#2a78d6' },
+        { label:'頭痛', data:pains, borderColor:'#e34948', backgroundColor:'rgba(227,73,72,0.06)', borderWidth:2, tension:0.35, yAxisID:'y2', pointRadius:4, pointBackgroundColor:'#e34948', borderDash:[5,4] }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ display:false } },
+      scales:{
+        y1:{ type:'linear', position:'left', title:{ display:true, text:'hPa', color:'#2a78d6', font:{size:11} }, grid:{ color:'rgba(128,128,128,0.1)' }, ticks:{ color:'#888', font:{size:11} } },
+        y2:{ type:'linear', position:'right', min:0, max:10, title:{ display:true, text:'スコア', color:'#e34948', font:{size:11} }, grid:{ display:false }, ticks:{ color:'#e34948', font:{size:11}, stepSize:2 } },
+        x:{ grid:{ display:false }, ticks:{ color:'#888', font:{size:10}, autoSkip:false, maxRotation:45 } }
+      }
+    }
+  });
+
+  // 服薬グラフ
+  const ago30 = new Date(Date.now() - 30*86400000);
+  const medCount = {};
+  MEDS.forEach(m => medCount[m] = 0);
+  records.filter(r => new Date(r.datetime) > ago30).forEach(r => r.meds?.forEach(m => { if (medCount[m.name] !== undefined) medCount[m.name]++; }));
+
+  if (charts.med) charts.med.destroy();
+  charts.med = new Chart(document.getElementById('medChart'), {
+    type: 'bar',
+    data: {
+      labels: MEDS,
+      datasets: [{ label:'回数', data: MEDS.map(m=>medCount[m]), backgroundColor:['#2a78d6','#4ab87a','#f5a623'], borderRadius:6, borderSkipped:false }]
+    },
+    options: {
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ display:false } },
+      scales:{
+        x:{ beginAtZero:true, ticks:{ stepSize:1, color:'#888', font:{size:11} }, grid:{ color:'rgba(128,128,128,0.1)' } },
+        y:{ ticks:{ color:'#888', font:{size:12} }, grid:{ display:false } }
+      }
+    }
+  });
+}
+
+// ===== Log =====
+function renderLog() {
+  const el = document.getElementById('log-list');
+  if (!records.length) { el.innerHTML = '<div class="empty"><i class="ti ti-clipboard-text"></i>まだ記録がありません</div>'; return; }
+  el.innerHTML = [...records].reverse().map(r => {
+    const dt = new Date(r.datetime);
+    const ds = dt.toLocaleDateString('ja-JP',{month:'numeric',day:'numeric',weekday:'short'}) + ' ' + dt.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+    const meds = r.meds?.length ? r.meds.map(m=>m.name+(m.dose?' '+m.dose:'')).join('、') : '服薬なし';
+    const details = [r.type, r.loc, r.pressure ? `気圧 ${r.pressure} hPa` : null, meds].filter(Boolean).join(' · ');
+    return `<div class="log-item">
+      <div class="score-circle sc-${r.pain}">${r.pain}</div>
+      <div>
+        <div class="log-date">${ds}</div>
+        <div class="log-detail">${details}</div>
+        ${r.memo ? `<div class="log-memo">${r.memo}</div>` : ''}
+      </div>
+      <button class="del-btn" onclick="deleteRecord(${r.id})" aria-label="削除"><i class="ti ti-x"></i></button>
+    </div>`;
+  }).join('');
+}
+
+function deleteRecord(id) {
+  if (!confirm('この記録を削除しますか？')) return;
+  records = records.filter(r => r.id !== id);
+  localStorage.setItem('ht_records', JSON.stringify(records));
+  renderLog();
+  updateRecordCount();
+}
+
+// ===== Settings =====
+function updateRecordCount() {
+  document.getElementById('record-count').textContent = `現在 ${records.length} 件の記録`;
+}
+
+function exportCSV() {
+  const rows = [['日時','気圧(hPa)','緯度','経度','頭痛スコア','種類','部位','服薬','メモ']];
+  records.forEach(r => rows.push([
+    r.datetime, r.pressure ?? '', r.lat ?? '', r.lon ?? '',
+    r.pain, r.type ?? '', r.loc ?? '',
+    r.meds?.map(m=>m.name+(m.dose?' '+m.dose:'')).join('/') ?? '',
+    r.memo ?? ''
+  ]));
+  const csv = rows.map(r => r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
+  a.download = `headache_log_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+function clearData() {
+  if (!confirm(`全 ${records.length} 件の記録を削除しますか？\nこの操作は元に戻せません。`)) return;
+  records = [];
+  localStorage.removeItem('ht_records');
+  showToast('削除しました');
+  updateRecordCount();
+}
+
+// ===== Toast =====
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ===== Service Worker =====
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
