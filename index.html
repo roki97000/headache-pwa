@@ -261,7 +261,20 @@ textarea:focus{outline:none;border-color:var(--orange)}
           </div>
         </div>
           <div class="flabel">頭痛の強さ</div>
-          <div class="pain-grid" id="pain-grid"></div>
+          <div class="pain-level-grid">
+            <button class="pain-level-btn" id="pain-mild" onclick="selectPain('mild')">
+              <span class="face">😐</span>
+              <span class="pain-text"><span class="pain-name">軽度</span><span class="pain-desc">やや普通の状態</span></span>
+            </button>
+            <button class="pain-level-btn" id="pain-moderate" onclick="selectPain('moderate')">
+              <span class="face">😣</span>
+              <span class="pain-text"><span class="pain-name">中程度</span><span class="pain-desc">少し痛い</span></span>
+            </button>
+            <button class="pain-level-btn" id="pain-severe" onclick="selectPain('severe')">
+              <span class="face">😫</span>
+              <span class="pain-text"><span class="pain-name">重度</span><span class="pain-desc">ひどく痛い</span></span>
+            </button>
+          </div>
           <div class="pain-hint" id="pain-hint">タップして選んでください</div>
         </div>
 
