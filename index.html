@@ -85,6 +85,14 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Hiragino San
 .alert-stable{background:var(--green-light);color:var(--green-dark);border-color:#90d8aa}
 
 .geo-row{font-size:11px;color:var(--text-muted);margin-top:8px;display:flex;align-items:center;gap:4px}
+/* 日時ピッカー */
+.datetime-row{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;background:var(--orange-light);border:1.5px solid #f5c090;border-radius:12px;margin-bottom:4px}
+.datetime-now{font-size:14px;font-weight:700;color:var(--orange-dark)}
+.datetime-change-btn{font-size:12px;font-weight:700;color:var(--orange);background:none;border:1.5px solid var(--orange);border-radius:20px;padding:5px 12px;cursor:pointer;font-family:inherit}
+.datetime-inputs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+input[type="date"],input[type="time"]{width:100%;padding:8px 10px;font-size:14px;font-weight:600;border:1.5px solid var(--border-strong);border-radius:10px;background:#fff;color:var(--text);font-family:inherit}
+input[type="date"]:focus,input[type="time"]:focus{outline:none;border-color:var(--orange)}
+.datetime-reset{font-size:12px;color:var(--text-muted);background:none;border:none;cursor:pointer;font-family:inherit;margin-top:6px;text-decoration:underline}
 
 /* 痛みスケール */
 .pain-grid{display:grid;grid-template-columns:repeat(11,1fr);gap:3px;margin-top:8px}
@@ -201,6 +209,19 @@ textarea:focus{outline:none;border-color:var(--orange)}
         <div class="card-title"><i class="ti ti-pencil"></i>記録する</div>
 
         <div class="form-block">
+          <div class="flabel">📅 記録日時</div>
+          <div class="datetime-row">
+            <div class="datetime-now" id="datetime-display">今すぐ記録</div>
+            <button class="datetime-change-btn" onclick="toggleDatetimePicker()">日時を変更</button>
+          </div>
+          <div id="datetime-picker" style="display:none">
+            <div class="datetime-inputs">
+              <input type="date" id="rec-date">
+              <input type="time" id="rec-time">
+            </div>
+            <button class="datetime-reset" onclick="resetDatetime()">← 今の日時に戻す</button>
+          </div>
+        </div>
           <div class="flabel">頭痛の強さ（0＝なし　10＝最強）</div>
           <div class="pain-grid" id="pain-grid"></div>
           <div class="pain-hint" id="pain-hint">タップして選んでください</div>
@@ -470,9 +491,19 @@ function saveRecord() {
     const cb = document.getElementById('med'+i);
     if (cb.checked) meds.push({ name: MEDS[i], dose: document.getElementById('dose'+i).value });
   }
+  // 日時：ピッカーが表示中なら入力値を使用、そうでなければ現在時刻
+  let datetime;
+  const picker = document.getElementById('datetime-picker');
+  const dateVal = document.getElementById('rec-date').value;
+  const timeVal = document.getElementById('rec-time').value;
+  if (picker.style.display !== 'none' && dateVal && timeVal) {
+    datetime = new Date(`${dateVal}T${timeVal}`).toISOString();
+  } else {
+    datetime = new Date().toISOString();
+  }
   const rec = {
     id: Date.now(),
-    datetime: new Date().toISOString(),
+    datetime,
     pressure: currentPressure,
     lat: geoCoords?.lat ?? null,
     lon: geoCoords?.lon ?? null,
@@ -480,10 +511,35 @@ function saveRecord() {
     memo: document.getElementById('memo').value.trim()
   };
   records.push(rec);
+  // 日時順に並び替えて保存
+  records.sort((a,b) => new Date(a.datetime) - new Date(b.datetime));
   localStorage.setItem('ht_records', JSON.stringify(records));
   showToast('記録しました ✓');
   resetForm();
   updateRecordCount();
+}
+
+// 日時ピッカー
+function toggleDatetimePicker() {
+  const picker = document.getElementById('datetime-picker');
+  const display = document.getElementById('datetime-display');
+  if (picker.style.display === 'none') {
+    // 現在日時をデフォルト値としてセット
+    const now = new Date();
+    const pad = n => String(n).padStart(2,'0');
+    document.getElementById('rec-date').value = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+    document.getElementById('rec-time').value = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    picker.style.display = 'block';
+    display.textContent = '日時を指定中';
+  } else {
+    picker.style.display = 'none';
+    display.textContent = '今すぐ記録';
+  }
+}
+
+function resetDatetime() {
+  document.getElementById('datetime-picker').style.display = 'none';
+  document.getElementById('datetime-display').textContent = '今すぐ記録';
 }
 
 function resetForm() {
@@ -498,6 +554,7 @@ function resetForm() {
     document.getElementById('med-row'+i).classList.remove('checked');
   }
   document.getElementById('memo').value = '';
+  resetDatetime();
 }
 
 function showTab(t, btn) {
