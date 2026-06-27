@@ -1,11 +1,12 @@
 {
-  "name": "頭痛記録 — 気圧ログ",
-  "short_name": "頭痛記録",
+  "name": "頭痛きろく",
+  "short_name": "頭痛きろく",
   "description": "頭痛・服薬・気圧を記録して傾向を把握するアプリ",
-  "start_url": "/",
+  "start_url": "/headache-pwa/",
+  "scope": "/headache-pwa/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#2a78d6",
+  "background_color": "#fff8f0",
+  "theme_color": "#e8630a",
   "lang": "ja",
   "orientation": "portrait",
   "icons": [
