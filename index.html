@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#2a78d6">
+<meta name="theme-color" content="#e8630a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="頭痛記録">
@@ -15,153 +15,143 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#f5f7fa;
+  --bg:#fff8f0;
   --surface:#ffffff;
-  --border:#e2e5eb;
-  --border-strong:#c8cdd7;
-  --text:#1a1d23;
-  --text-sub:#52576a;
-  --text-muted:#8a90a0;
-  --accent:#2a78d6;
-  --accent-bg:#e8f1fb;
-  --accent-text:#1a5aad;
-  --danger:#c0392b;
-  --danger-bg:#fdf0ef;
-  --warning-bg:#fdf5e0;
-  --warning-text:#7a5200;
-  --success-bg:#edf7ee;
-  --success-text:#1e6e2e;
-  --radius:10px;
-  --shadow:0 1px 4px rgba(0,0,0,0.08);
-}
-@media(prefers-color-scheme:dark){
-  :root{
-    --bg:#111318;
-    --surface:#1e2128;
-    --border:#2e333d;
-    --border-strong:#3e4452;
-    --text:#e8eaf0;
-    --text-sub:#9099af;
-    --text-muted:#5a6070;
-    --accent:#4a94f0;
-    --accent-bg:#162440;
-    --accent-text:#80b8f8;
-    --danger:#e05a4e;
-    --danger-bg:#2a1512;
-    --warning-bg:#2a2010;
-    --warning-text:#e0b040;
-    --success-bg:#102214;
-    --success-text:#4db86a;
-  }
+  --border:#f0d8c0;
+  --border-strong:#e0b890;
+  --text:#2d1a00;
+  --text-sub:#6b3d10;
+  --text-muted:#b07840;
+  --orange:#e8630a;
+  --orange-light:#fff0e0;
+  --orange-dark:#c04e00;
+  --yellow:#f5c200;
+  --yellow-light:#fffae0;
+  --yellow-dark:#8a6c00;
+  --amber:#f09000;
+  --amber-light:#fff4d6;
+  --red:#e03020;
+  --red-light:#fff0ee;
+  --red-dark:#a01800;
+  --green:#2e9e50;
+  --green-light:#edfaf2;
+  --green-dark:#1a6030;
+  --radius:12px;
+  --shadow:0 2px 10px rgba(232,99,10,0.10);
 }
 html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Hiragino Kaku Gothic ProN',Meiryo,sans-serif;background:var(--bg);color:var(--text);font-size:16px;-webkit-font-smoothing:antialiased}
-
-/* layout */
 .app{max-width:480px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;padding-bottom:72px}
-.content{flex:1;padding:16px}
 
-/* bottom nav */
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:0.5px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+/* ヘッダー */
+.header{background:var(--orange);color:#fff;padding:14px 16px 12px;display:flex;align-items:center;justify-content:space-between}
+.header h1{font-size:18px;font-weight:800;letter-spacing:0.02em;display:flex;align-items:center;gap:8px}
+.header-date{font-size:11px;opacity:0.85;margin-top:3px}
+
+/* ボトムナビ */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:2px solid var(--orange-light);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -2px 12px rgba(232,99,10,0.10)}
 .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 0;border:none;background:transparent;color:var(--text-muted);cursor:pointer;font-size:10px;font-family:inherit;transition:color 0.15s}
 .nav-btn i{font-size:22px}
-.nav-btn.active{color:var(--accent)}
+.nav-btn.active{color:var(--orange)}
 
-/* screens */
 .screen{display:none}.screen.active{display:block}
+.content{flex:1;padding:14px}
 
-/* cards */
-.card{background:var(--surface);border:0.5px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
+/* カード */
+.card{background:var(--surface);border:1.5px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.card-title{font-size:12px;font-weight:800;color:var(--orange);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.card-title i{font-size:16px}
 
-/* section label */
-.sect{font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px}
+/* 気象グリッド */
+.meteo-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.meteo-block{border-radius:12px;padding:12px}
+.meteo-block-pressure{background:var(--orange-light);border:1.5px solid #f5c090}
+.meteo-block-weather{background:var(--yellow-light);border:1.5px solid #f5e080}
+.meteo-label{font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px}
+.meteo-val{font-size:30px;font-weight:800;color:var(--orange);letter-spacing:-1px;line-height:1}
+.meteo-unit{font-size:12px;color:var(--text-muted);margin-top:3px}
+.meteo-sub{font-size:11px;color:var(--text-sub);margin-top:4px}
+.weather-row{display:flex;align-items:center;gap:8px;margin-top:4px}
+.weather-icon{font-size:28px;line-height:1}
+.weather-temp{font-size:22px;font-weight:800;color:var(--yellow-dark)}
+.weather-desc{font-size:12px;color:var(--text-sub);margin-top:2px}
 
-/* pressure */
-.pressure-row{display:flex;align-items:center;gap:12px}
-.pressure-num{font-size:36px;font-weight:600;letter-spacing:-1px;color:var(--text);line-height:1}
-.pressure-unit{font-size:13px;color:var(--text-muted);margin-top:4px}
-.trend-badge{font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;margin-left:auto}
-.trend-up{background:var(--warning-bg);color:var(--warning-text)}
-.trend-down{background:var(--danger-bg);color:var(--danger)}
-.trend-stable{background:var(--success-bg);color:var(--success-text)}
-.pressure-meta{font-size:11px;color:var(--text-muted);margin-top:6px}
-.geo-status{font-size:11px;color:var(--text-muted);margin-top:4px;display:flex;align-items:center;gap:4px}
-/* weather */
-.weather-row{display:flex;align-items:center;gap:16px;margin-top:12px;padding-top:12px;border-top:0.5px solid var(--border)}
-.weather-icon{font-size:32px;line-height:1}
-.weather-temp{font-size:26px;font-weight:600;letter-spacing:-0.5px;color:var(--text)}
-.weather-temp-unit{font-size:14px;color:var(--text-muted)}
-.weather-desc{font-size:13px;color:var(--text-sub);margin-top:2px}
+/* 警戒バー */
+.alert-bar{display:flex;align-items:center;gap:10px;margin-top:12px;padding:11px 14px;border-radius:12px;font-weight:800;font-size:15px;border:2px solid transparent}
+.alert-bar i{font-size:22px;flex-shrink:0}
+.alert-sub{font-size:11px;font-weight:500;margin-left:auto;opacity:0.75}
+.alert-danger{background:var(--red-light);color:var(--red);border-color:#f5a090}
+.alert-warning{background:var(--orange-light);color:var(--orange-dark);border-color:#f5c090}
+.alert-caution{background:var(--yellow-light);color:var(--yellow-dark);border-color:#f5e090}
+.alert-stable{background:var(--green-light);color:var(--green-dark);border-color:#90d8aa}
 
-/* pain scale */
-.pain-grid{display:grid;grid-template-columns:repeat(11,1fr);gap:4px;margin-top:8px}
-.pain-btn{aspect-ratio:1;border:0.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);color:var(--text-sub);transition:all 0.12s;-webkit-tap-highlight-color:transparent}
-.pain-btn:active{transform:scale(0.92)}
-.pain-btn.sel{background:var(--accent-bg);border-color:var(--accent);color:var(--accent);font-weight:700}
-.pain-hint{font-size:12px;color:var(--text-muted);margin-top:6px;min-height:18px}
+.geo-row{font-size:11px;color:var(--text-muted);margin-top:8px;display:flex;align-items:center;gap:4px}
 
-/* toggle chips */
+/* 痛みスケール */
+.pain-grid{display:grid;grid-template-columns:repeat(11,1fr);gap:3px;margin-top:8px}
+.pain-btn{aspect-ratio:1;border:2px solid var(--border);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;background:var(--bg);color:var(--text-sub);transition:all 0.12s;-webkit-tap-highlight-color:transparent}
+.pain-btn:active{transform:scale(0.88)}
+.pain-btn.sel{background:var(--orange);border-color:var(--orange);color:#fff;box-shadow:0 3px 10px rgba(232,99,10,0.35)}
+.pain-hint{font-size:12px;color:var(--text-muted);margin-top:6px;min-height:18px;text-align:center}
+
+/* チップ */
 .chip-grid{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
-.chip{padding:7px 14px;border:0.5px solid var(--border);border-radius:20px;font-size:13px;cursor:pointer;background:var(--bg);color:var(--text-sub);transition:all 0.12s;-webkit-tap-highlight-color:transparent;white-space:nowrap}
-.chip:active{transform:scale(0.95)}
-.chip.sel{background:var(--accent-bg);border-color:var(--accent);color:var(--accent);font-weight:500}
+.chip{padding:8px 15px;border:2px solid var(--border);border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;background:var(--bg);color:var(--text-sub);transition:all 0.12s;-webkit-tap-highlight-color:transparent;white-space:nowrap}
+.chip:active{transform:scale(0.94)}
+.chip.sel{background:var(--orange);border-color:var(--orange);color:#fff}
 
-/* meds */
+/* 服薬 */
 .med-list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
-.med-row{display:flex;align-items:center;gap:8px}
-.med-name{flex:1;font-size:14px;font-weight:500}
-.med-check{width:22px;height:22px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
-.med-dose{width:100px;padding:6px 8px;font-size:13px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface);color:var(--text);font-family:inherit}
-.med-dose:focus{outline:none;border-color:var(--accent)}
-.med-dose:disabled{opacity:0.4}
+.med-row{display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--orange-light);border-radius:12px;border:1.5px solid #f5c090}
+.med-row.checked{background:var(--amber-light);border-color:var(--amber)}
+.med-name{flex:1;font-size:14px;font-weight:600;color:var(--text)}
+.med-check{width:22px;height:22px;accent-color:var(--orange);cursor:pointer;flex-shrink:0}
+.med-dose{width:88px;padding:6px 8px;font-size:13px;border:1.5px solid var(--border-strong);border-radius:8px;background:#fff;color:var(--text);font-family:inherit;text-align:center;font-weight:600}
+.med-dose:focus{outline:none;border-color:var(--orange)}
+.med-dose:disabled{opacity:0.3}
 
-/* memo */
-textarea{width:100%;padding:10px;font-size:14px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface);color:var(--text);font-family:inherit;resize:none;line-height:1.5}
-textarea:focus{outline:none;border-color:var(--accent)}
+/* テキストエリア */
+textarea{width:100%;padding:11px;font-size:14px;border:1.5px solid var(--border-strong);border-radius:var(--radius);background:#fff;color:var(--text);font-family:inherit;resize:none;line-height:1.6}
+textarea:focus{outline:none;border-color:var(--orange)}
 
-/* submit */
-.save-btn{width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity 0.15s;margin-top:4px}
-.save-btn:active{opacity:0.85}
+/* 保存ボタン */
+.save-btn{width:100%;padding:15px;background:var(--orange);color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:0.03em;box-shadow:0 4px 14px rgba(232,99,10,0.35)}
+.save-btn:active{opacity:0.85;transform:scale(0.98)}
 
-/* log items */
-.log-item{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:start;padding:12px 0;border-bottom:0.5px solid var(--border)}
+/* フォーム */
+.flabel{display:block;font-size:13px;font-weight:700;color:var(--text-sub);margin-bottom:5px}
+.form-block{margin-bottom:18px}
+
+/* 履歴 */
+.log-item{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:start;padding:13px 0;border-bottom:1.5px solid var(--border)}
 .log-item:last-child{border-bottom:none}
-.score-circle{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0}
-.sc-0,.sc-1,.sc-2,.sc-3{background:var(--success-bg);color:var(--success-text)}
-.sc-4,.sc-5,.sc-6{background:var(--warning-bg);color:var(--warning-text)}
-.sc-7,.sc-8,.sc-9,.sc-10{background:var(--danger-bg);color:var(--danger)}
-.log-date{font-size:11px;color:var(--text-muted)}
-.log-detail{font-size:13px;color:var(--text-sub);margin-top:2px;line-height:1.5}
-.log-memo{font-size:12px;color:var(--text-muted);margin-top:2px}
-.del-btn{border:none;background:none;color:var(--text-muted);cursor:pointer;padding:4px;font-size:18px;line-height:1}
-.del-btn:active{color:var(--danger)}
+.score-circle{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;flex-shrink:0}
+.sc-0,.sc-1,.sc-2,.sc-3{background:var(--green-light);color:var(--green-dark);border:2px solid #90d8aa}
+.sc-4,.sc-5,.sc-6{background:var(--yellow-light);color:var(--yellow-dark);border:2px solid #f5e090}
+.sc-7,.sc-8,.sc-9,.sc-10{background:var(--red-light);color:var(--red);border:2px solid #f5a090}
+.log-datetime{font-size:12px;font-weight:700;color:var(--orange-dark);margin-bottom:4px}
+.log-detail{font-size:12px;color:var(--text-sub);line-height:1.7}
+.log-memo{font-size:11px;color:var(--text-muted);margin-top:3px;font-style:italic}
+.del-btn{border:none;background:none;color:var(--border-strong);cursor:pointer;padding:4px;font-size:20px;line-height:1}
+.del-btn:active{color:var(--red)}
 
-/* form label */
-.flabel{display:block;font-size:13px;font-weight:600;color:var(--text-sub);margin-bottom:4px}
-.form-block{margin-bottom:16px}
-
-/* chart wrapper */
+/* チャート */
 .chart-wrap{position:relative;width:100%}
 
-/* empty */
-.empty{text-align:center;padding:40px 0;color:var(--text-muted);font-size:14px}
-.empty i{font-size:40px;display:block;margin-bottom:8px;opacity:0.4}
+/* 空 */
+.empty{text-align:center;padding:48px 0;color:var(--text-muted);font-size:14px}
+.empty i{font-size:48px;display:block;margin-bottom:10px;opacity:0.25}
 
-/* settings */
-.settings-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:0.5px solid var(--border)}
+/* 設定 */
+.settings-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1.5px solid var(--border)}
 .settings-row:last-child{border-bottom:none}
-.settings-label{font-size:14px}
+.settings-label{font-size:14px;font-weight:600}
 .settings-sub{font-size:12px;color:var(--text-muted);margin-top:2px}
-.settings-btn{padding:7px 14px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text-sub);font-size:13px;cursor:pointer;font-family:inherit}
-.danger-btn{border-color:var(--danger);color:var(--danger);background:var(--danger-bg)}
+.settings-btn{padding:8px 16px;border:2px solid var(--border-strong);border-radius:var(--radius);background:var(--bg);color:var(--text-sub);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.danger-btn{border-color:#f5a090;color:var(--red);background:var(--red-light)}
 
-/* toast */
-.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(10px);background:rgba(20,22,28,0.92);color:#fff;padding:10px 20px;border-radius:20px;font-size:14px;opacity:0;transition:all 0.25s;pointer-events:none;z-index:999;white-space:nowrap;backdrop-filter:blur(8px)}
+/* トースト */
+.toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--orange);color:#fff;padding:11px 24px;border-radius:24px;font-size:14px;font-weight:700;opacity:0;transition:all 0.25s;pointer-events:none;z-index:999;white-space:nowrap;box-shadow:0 4px 18px rgba(232,99,10,0.40)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
-/* header */
-.header{padding:16px 16px 0;display:flex;align-items:center;justify-content:space-between}
-.header h1{font-size:18px;font-weight:700}
-.header-sub{font-size:12px;color:var(--text-muted)}
 </style>
 </head>
 <body>
@@ -169,51 +159,56 @@ textarea:focus{outline:none;border-color:var(--accent)}
 <div class="app">
   <div class="header">
     <div>
-      <h1>頭痛記録</h1>
-      <div class="header-sub" id="today-date"></div>
+      <h1>🧠 頭痛きろく</h1>
+      <div class="header-date" id="today-date"></div>
     </div>
   </div>
 
   <div class="content">
 
-    <!-- ===== 記録 ===== -->
+    <!-- 記録 -->
     <div id="screen-record" class="screen active">
 
-      <!-- 気圧・天気カード -->
       <div class="card">
-        <div class="sect">現在の気象</div>
-        <div class="pressure-row">
-          <div>
-            <div class="pressure-num" id="p-val">--</div>
-            <div class="pressure-unit">hPa</div>
+        <div class="card-title"><i class="ti ti-cloud-storm"></i>いまの気象</div>
+        <div class="meteo-grid">
+          <div class="meteo-block meteo-block-pressure">
+            <div class="meteo-label">気圧</div>
+            <div class="meteo-val" id="p-val">--</div>
+            <div class="meteo-unit">hPa</div>
+            <div class="meteo-sub" id="p-time"></div>
           </div>
-          <div id="p-trend"></div>
-        </div>
-        <div class="pressure-meta" id="p-time"></div>
-        <div class="geo-status" id="geo-status"><i class="ti ti-map-pin" style="font-size:13px"></i><span id="geo-text">位置情報を取得中…</span></div>
-        <div class="weather-row" id="weather-row" style="display:none">
-          <div class="weather-icon" id="w-icon">--</div>
-          <div>
-            <div style="display:flex;align-items:baseline;gap:4px">
-              <div class="weather-temp" id="w-temp">--</div>
-              <div class="weather-temp-unit">°C</div>
+          <div class="meteo-block meteo-block-weather" id="weather-block" style="display:none">
+            <div class="meteo-label">天気・気温</div>
+            <div class="weather-row">
+              <div class="weather-icon" id="w-icon"></div>
+              <div>
+                <div class="weather-temp"><span id="w-temp">--</span>°</div>
+                <div class="weather-desc" id="w-desc"></div>
+              </div>
             </div>
-            <div class="weather-desc" id="w-desc"></div>
           </div>
         </div>
+        <div class="alert-bar alert-stable" id="alert-bar">
+          <i class="ti ti-circle-check" id="alert-icon"></i>
+          <span id="alert-text">取得中…</span>
+          <span class="alert-sub" id="alert-sub"></span>
+        </div>
+        <div class="geo-row"><i class="ti ti-map-pin" style="font-size:12px"></i><span id="geo-text">位置情報を取得中…</span></div>
       </div>
 
-      <!-- 頭痛スコア -->
       <div class="card">
+        <div class="card-title"><i class="ti ti-pencil"></i>記録する</div>
+
         <div class="form-block">
-          <div class="flabel">頭痛の強さ（0 なし → 10 最強）</div>
+          <div class="flabel">頭痛の強さ（0＝なし　10＝最強）</div>
           <div class="pain-grid" id="pain-grid"></div>
-          <div class="pain-hint" id="pain-hint">タップして選択してください</div>
+          <div class="pain-hint" id="pain-hint">タップして選んでください</div>
         </div>
 
         <div class="form-block">
           <div class="flabel">頭痛の種類</div>
-          <div class="chip-grid" id="type-chips">
+          <div class="chip-grid">
             <button class="chip" data-group="type" data-val="脈打つ痛み">脈打つ痛み</button>
             <button class="chip" data-group="type" data-val="重い">重い</button>
             <button class="chip" data-group="type" data-val="刺すような痛み">刺すような痛み</button>
@@ -223,7 +218,7 @@ textarea:focus{outline:none;border-color:var(--accent)}
 
         <div class="form-block">
           <div class="flabel">痛みの部位</div>
-          <div class="chip-grid" id="loc-chips">
+          <div class="chip-grid">
             <button class="chip" data-group="loc" data-val="前頭部">前頭部</button>
             <button class="chip" data-group="loc" data-val="側頭部（右）">側頭部（右）</button>
             <button class="chip" data-group="loc" data-val="側頭部（左）">側頭部（左）</button>
@@ -238,20 +233,20 @@ textarea:focus{outline:none;border-color:var(--accent)}
         <div class="form-block">
           <div class="flabel">服薬</div>
           <div class="med-list">
-            <div class="med-row">
+            <div class="med-row" id="med-row0">
               <input type="checkbox" class="med-check" id="med0" onchange="toggleDose(0)">
               <label class="med-name" for="med0">ゾルミトリプタン</label>
-              <input type="text" class="med-dose" id="dose0" placeholder="用量・回数" disabled>
+              <input type="text" class="med-dose" id="dose0" placeholder="用量" disabled>
             </div>
-            <div class="med-row">
+            <div class="med-row" id="med-row1">
               <input type="checkbox" class="med-check" id="med1" onchange="toggleDose(1)">
               <label class="med-name" for="med1">ロキソプロフェン</label>
-              <input type="text" class="med-dose" id="dose1" placeholder="用量・回数" disabled>
+              <input type="text" class="med-dose" id="dose1" placeholder="用量" disabled>
             </div>
-            <div class="med-row">
+            <div class="med-row" id="med-row2">
               <input type="checkbox" class="med-check" id="med2" onchange="toggleDose(2)">
               <label class="med-name" for="med2">レバミピド</label>
-              <input type="text" class="med-dose" id="dose2" placeholder="用量・回数" disabled>
+              <input type="text" class="med-dose" id="dose2" placeholder="用量" disabled>
             </div>
           </div>
         </div>
@@ -261,86 +256,64 @@ textarea:focus{outline:none;border-color:var(--accent)}
           <textarea id="memo" rows="2" placeholder="天気・体調・前兆など自由に"></textarea>
         </div>
 
-        <button class="save-btn" onclick="saveRecord()"><i class="ti ti-check" style="vertical-align:-2px"></i> 記録する</button>
+        <button class="save-btn" onclick="saveRecord()"><i class="ti ti-device-floppy"></i>記録する</button>
       </div>
     </div>
 
-    <!-- ===== グラフ ===== -->
+    <!-- グラフ -->
     <div id="screen-chart" class="screen">
       <div class="card">
-        <div class="sect">気圧と頭痛スコア（直近14日）</div>
+        <div class="card-title"><i class="ti ti-chart-line"></i>気圧と頭痛スコア（直近14日）</div>
         <div class="chart-wrap" style="height:240px">
           <canvas id="mainChart" role="img" aria-label="気圧と頭痛スコアの折れ線グラフ">気圧と頭痛スコアの推移</canvas>
         </div>
         <div style="display:flex;gap:16px;margin-top:10px;font-size:12px;color:var(--text-muted)">
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:3px;background:#2a78d6;border-radius:2px;display:inline-block"></span>気圧 (hPa)</span>
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:3px;background:#e34948;border-radius:2px;border-top:2px dashed #e34948;display:inline-block"></span>頭痛スコア</span>
+          <span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:4px;background:#e8630a;border-radius:2px;display:inline-block"></span>気圧 (hPa)</span>
+          <span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:4px;background:#e03020;border-radius:2px;display:inline-block"></span>頭痛スコア</span>
         </div>
       </div>
       <div class="card">
-        <div class="sect">服薬回数（過去30日）</div>
+        <div class="card-title"><i class="ti ti-pill"></i>服薬回数（過去30日）</div>
         <div class="chart-wrap" style="height:160px">
           <canvas id="medChart" role="img" aria-label="服薬回数の棒グラフ">服薬回数</canvas>
         </div>
       </div>
     </div>
 
-    <!-- ===== 履歴 ===== -->
+    <!-- 履歴 -->
     <div id="screen-log" class="screen">
       <div class="card">
-        <div class="sect">記録一覧</div>
+        <div class="card-title"><i class="ti ti-list"></i>記録一覧</div>
         <div id="log-list"><div class="empty"><i class="ti ti-clipboard-text"></i>まだ記録がありません</div></div>
       </div>
     </div>
 
-    <!-- ===== 設定 ===== -->
+    <!-- 設定 -->
     <div id="screen-settings" class="screen">
       <div class="card">
-        <div class="sect">データ管理</div>
+        <div class="card-title"><i class="ti ti-database"></i>データ管理</div>
         <div class="settings-row">
-          <div>
-            <div class="settings-label">CSVエクスポート</div>
-            <div class="settings-sub">全記録をダウンロード</div>
-          </div>
+          <div><div class="settings-label">CSVエクスポート</div><div class="settings-sub">全記録をダウンロード</div></div>
           <button class="settings-btn" onclick="exportCSV()"><i class="ti ti-download" style="vertical-align:-2px"></i> 書き出し</button>
         </div>
         <div class="settings-row">
-          <div>
-            <div class="settings-label">全データを削除</div>
-            <div class="settings-sub" id="record-count"></div>
-          </div>
+          <div><div class="settings-label">全データを削除</div><div class="settings-sub" id="record-count"></div></div>
           <button class="settings-btn danger-btn" onclick="clearData()"><i class="ti ti-trash" style="vertical-align:-2px"></i> 削除</button>
         </div>
       </div>
       <div class="card">
-        <div class="sect">このアプリについて</div>
-        <div class="settings-row">
-          <div>
-            <div class="settings-label">気圧データ提供</div>
-            <div class="settings-sub">Open-Meteo（無料・登録不要）</div>
-          </div>
-        </div>
-        <div class="settings-row">
-          <div>
-            <div class="settings-label">データ保存場所</div>
-            <div class="settings-sub">このデバイスのみ（サーバー送信なし）</div>
-          </div>
-        </div>
-        <div class="settings-row">
-          <div>
-            <div class="settings-label">バージョン</div>
-            <div class="settings-sub">1.0.0</div>
-          </div>
-        </div>
+        <div class="card-title"><i class="ti ti-info-circle"></i>このアプリについて</div>
+        <div class="settings-row"><div><div class="settings-label">気圧・天気データ</div><div class="settings-sub">Open-Meteo（無料・登録不要）</div></div></div>
+        <div class="settings-row"><div><div class="settings-label">データ保存場所</div><div class="settings-sub">このデバイスのみ（サーバー送信なし）</div></div></div>
+        <div class="settings-row"><div><div class="settings-label">バージョン</div><div class="settings-sub">1.2.0</div></div></div>
       </div>
     </div>
 
-  </div><!-- /content -->
-</div><!-- /app -->
+  </div>
+</div>
 
-<!-- Bottom Nav -->
 <nav class="bottom-nav">
-  <button class="nav-btn active" onclick="showTab('record',this)"><i class="ti ti-edit"></i>記録</button>
+  <button class="nav-btn active" onclick="showTab('record',this)"><i class="ti ti-pencil"></i>記録</button>
   <button class="nav-btn" onclick="showTab('chart',this)"><i class="ti ti-chart-line"></i>グラフ</button>
   <button class="nav-btn" onclick="showTab('log',this)"><i class="ti ti-list"></i>履歴</button>
   <button class="nav-btn" onclick="showTab('settings',this)"><i class="ti ti-settings"></i>設定</button>
@@ -349,7 +322,6 @@ textarea:focus{outline:none;border-color:var(--accent)}
 <div class="toast" id="toast"></div>
 
 <script>
-// ===== State =====
 const MEDS = ['ゾルミトリプタン','ロキソプロフェン','レバミピド'];
 const PAIN_LABELS = ['なし','ごく軽微','軽度','軽〜中','中程度','中程度','中〜強','強い','かなり強い','非常に強い','最強'];
 let state = { pain: null, type: null, loc: null };
@@ -358,18 +330,38 @@ let currentPressure = null;
 let geoCoords = null;
 let charts = {};
 
-// ===== Init =====
 document.getElementById('today-date').textContent = new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
 buildPainGrid();
 requestGeoAndPressure();
 setInterval(requestGeoAndPressure, 600000);
 updateRecordCount();
 
-// ===== Geo + Pressure =====
+function calcAlertLevel(current) {
+  const threeHoursAgo = Date.now() - 3 * 3600 * 1000;
+  const oldRec = [...records].reverse().find(r => new Date(r.datetime).getTime() < threeHoursAgo && r.pressure);
+  const prev = oldRec?.pressure ?? null;
+  const diff = prev !== null ? current - prev : 0;
+  const abs = Math.abs(diff);
+  const sign = diff > 0 ? '+' : '';
+  if (abs >= 6) return { cls:'alert-danger',  icon:'ti-alert-triangle', text:'⚠ 警戒',     sub: prev ? `${sign}${diff.toFixed(1)} hPa/3h` : '' };
+  if (abs >= 4) return { cls:'alert-warning', icon:'ti-alert-circle',   text:'🔶 やや注意', sub: prev ? `${sign}${diff.toFixed(1)} hPa/3h` : '' };
+  if (abs >= 2) return { cls:'alert-caution', icon:'ti-info-circle',    text:'🔸 上昇注意', sub: prev ? `${sign}${diff.toFixed(1)} hPa/3h` : '' };
+  return          { cls:'alert-stable',  icon:'ti-circle-check',  text:'✅ 安定',     sub: prev ? `${sign}${diff.toFixed(1)} hPa/3h` : '変化データなし' };
+}
+
+function renderAlertBar(p) {
+  const lv = calcAlertLevel(p);
+  const bar = document.getElementById('alert-bar');
+  bar.className = 'alert-bar ' + lv.cls;
+  document.getElementById('alert-icon').className = 'ti ' + lv.icon;
+  document.getElementById('alert-text').textContent = lv.text;
+  document.getElementById('alert-sub').textContent = lv.sub;
+}
+
 function requestGeoAndPressure() {
   if (!navigator.geolocation) {
-    document.getElementById('geo-text').textContent = '位置情報非対応 — 岡崎市の気圧を使用';
-    fetchPressure(34.9565, 137.1651, '岡崎市（デフォルト）');
+    document.getElementById('geo-text').textContent = '位置情報非対応 — 岡崎市の値を使用';
+    fetchWeather(34.9565, 137.1651, '岡崎市（デフォルト）');
     return;
   }
   navigator.geolocation.getCurrentPosition(
@@ -377,11 +369,11 @@ function requestGeoAndPressure() {
       const { latitude: lat, longitude: lon } = pos.coords;
       geoCoords = { lat, lon };
       reverseGeocode(lat, lon);
-      fetchPressure(lat, lon, null);
+      fetchWeather(lat, lon, null);
     },
-    err => {
-      document.getElementById('geo-text').textContent = '位置情報取得失敗 — 岡崎市の気圧を使用';
-      fetchPressure(34.9565, 137.1651, '岡崎市（デフォルト）');
+    () => {
+      document.getElementById('geo-text').textContent = '位置情報取得失敗 — 岡崎市の値を使用';
+      fetchWeather(34.9565, 137.1651, '岡崎市（デフォルト）');
     },
     { timeout: 8000, maximumAge: 300000 }
   );
@@ -398,24 +390,22 @@ async function reverseGeocode(lat, lon) {
   }
 }
 
-async function fetchPressure(lat, lon, label) {
+async function fetchWeather(lat, lon, label) {
   if (label) document.getElementById('geo-text').textContent = label;
   try {
     const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=surface_pressure,temperature_2m,weather_code&timezone=Asia%2FTokyo`);
     const d = await r.json();
     const p = Math.round(d.current.surface_pressure * 10) / 10;
+    const temp = Math.round(d.current.temperature_2m * 10) / 10;
+    const { icon, desc } = weatherInfo(d.current.weather_code);
     currentPressure = p;
     document.getElementById('p-val').textContent = p;
-    document.getElementById('p-time').textContent = '取得: ' + new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
-    renderTrend(p);
-    // 天気・気温
-    const temp = Math.round(d.current.temperature_2m * 10) / 10;
-    const wcode = d.current.weather_code;
-    const { icon, desc } = weatherInfo(wcode);
-    document.getElementById('w-temp').textContent = temp;
+    document.getElementById('p-time').textContent = '更新: ' + new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
     document.getElementById('w-icon').textContent = icon;
+    document.getElementById('w-temp').textContent = temp;
     document.getElementById('w-desc').textContent = desc;
-    document.getElementById('weather-row').style.display = 'flex';
+    document.getElementById('weather-block').style.display = 'block';
+    renderAlertBar(p);
   } catch {
     document.getElementById('p-val').textContent = '--';
     document.getElementById('p-time').textContent = '取得失敗';
@@ -423,34 +413,22 @@ async function fetchPressure(lat, lon, label) {
 }
 
 function weatherInfo(code) {
-  if (code === 0)                       return { icon: '☀️', desc: '快晴' };
-  if (code === 1)                       return { icon: '🌤️', desc: 'ほぼ晴れ' };
-  if (code === 2)                       return { icon: '⛅', desc: '晴れ時々曇り' };
-  if (code === 3)                       return { icon: '☁️', desc: '曇り' };
-  if (code >= 45 && code <= 48)         return { icon: '🌫️', desc: '霧' };
-  if (code >= 51 && code <= 55)         return { icon: '🌦️', desc: '霧雨' };
-  if (code >= 61 && code <= 65)         return { icon: '🌧️', desc: '雨' };
-  if (code >= 66 && code <= 67)         return { icon: '🌨️', desc: '雨雪（着氷性）' };
-  if (code >= 71 && code <= 75)         return { icon: '❄️', desc: '雪' };
-  if (code === 77)                      return { icon: '🌨️', desc: '霧雪' };
-  if (code >= 80 && code <= 82)         return { icon: '🌦️', desc: 'にわか雨' };
-  if (code >= 85 && code <= 86)         return { icon: '🌨️', desc: 'にわか雪' };
-  if (code >= 95 && code <= 99)         return { icon: '⛈️', desc: '雷雨' };
-  return { icon: '🌡️', desc: `天気コード ${code}` };
+  if (code===0)           return {icon:'☀️',desc:'快晴'};
+  if (code===1)           return {icon:'🌤️',desc:'ほぼ晴れ'};
+  if (code===2)           return {icon:'⛅',desc:'晴れ時々曇り'};
+  if (code===3)           return {icon:'☁️',desc:'曇り'};
+  if (code>=45&&code<=48) return {icon:'🌫️',desc:'霧'};
+  if (code>=51&&code<=55) return {icon:'🌦️',desc:'霧雨'};
+  if (code>=61&&code<=65) return {icon:'🌧️',desc:'雨'};
+  if (code>=66&&code<=67) return {icon:'🌨️',desc:'雨雪'};
+  if (code>=71&&code<=75) return {icon:'❄️',desc:'雪'};
+  if (code===77)          return {icon:'🌨️',desc:'霧雪'};
+  if (code>=80&&code<=82) return {icon:'🌦️',desc:'にわか雨'};
+  if (code>=85&&code<=86) return {icon:'🌨️',desc:'にわか雪'};
+  if (code>=95&&code<=99) return {icon:'⛈️',desc:'雷雨'};
+  return {icon:'🌡️',desc:`コード${code}`};
 }
 
-function renderTrend(p) {
-  const prev = records.length ? records[records.length-1]?.pressure : null;
-  let cls = 'trend-stable', icon = '→', label = '安定';
-  if (prev) {
-    const diff = p - prev;
-    if (diff > 1) { cls='trend-up'; icon='↑'; label=`+${diff.toFixed(1)} hPa上昇`; }
-    else if (diff < -1) { cls='trend-down'; icon='↓'; label=`${diff.toFixed(1)} hPa低下`; }
-  }
-  document.getElementById('p-trend').innerHTML = `<span class="trend-badge ${cls}">${icon} ${label}</span>`;
-}
-
-// ===== Pain Grid =====
 function buildPainGrid() {
   const g = document.getElementById('pain-grid');
   for (let i = 0; i <= 10; i++) {
@@ -466,7 +444,6 @@ function buildPainGrid() {
   }
 }
 
-// ===== Chips =====
 document.addEventListener('click', e => {
   const c = e.target.closest('.chip[data-group]');
   if (!c) return;
@@ -474,20 +451,20 @@ document.addEventListener('click', e => {
   document.querySelectorAll(`.chip[data-group="${g}"]`).forEach(x=>x.classList.remove('sel'));
   c.classList.add('sel');
   if (g==='type') state.type = c.dataset.val;
-  if (g==='loc') state.loc = c.dataset.val;
+  if (g==='loc')  state.loc  = c.dataset.val;
 });
 
-// ===== Meds =====
 function toggleDose(i) {
   const cb = document.getElementById('med'+i);
   const inp = document.getElementById('dose'+i);
+  const row = document.getElementById('med-row'+i);
   inp.disabled = !cb.checked;
-  if (!cb.checked) inp.value = '';
+  if (!cb.checked) { inp.value=''; row.classList.remove('checked'); }
+  else row.classList.add('checked');
 }
 
-// ===== Save =====
 function saveRecord() {
-  if (state.pain === null) { showToast('頭痛スコアを選択してください'); return; }
+  if (state.pain === null) { showToast('頭痛スコアを選んでください'); return; }
   const meds = [];
   for (let i = 0; i < 3; i++) {
     const cb = document.getElementById('med'+i);
@@ -499,15 +476,12 @@ function saveRecord() {
     pressure: currentPressure,
     lat: geoCoords?.lat ?? null,
     lon: geoCoords?.lon ?? null,
-    pain: state.pain,
-    type: state.type,
-    loc: state.loc,
-    meds,
+    pain: state.pain, type: state.type, loc: state.loc, meds,
     memo: document.getElementById('memo').value.trim()
   };
   records.push(rec);
   localStorage.setItem('ht_records', JSON.stringify(records));
-  showToast('記録しました');
+  showToast('記録しました ✓');
   resetForm();
   updateRecordCount();
 }
@@ -515,17 +489,17 @@ function saveRecord() {
 function resetForm() {
   state = { pain: null, type: null, loc: null };
   document.querySelectorAll('.pain-btn').forEach(b=>b.classList.remove('sel'));
-  document.getElementById('pain-hint').textContent = 'タップして選択してください';
+  document.getElementById('pain-hint').textContent = 'タップして選んでください';
   document.querySelectorAll('.chip').forEach(b=>b.classList.remove('sel'));
   for (let i = 0; i < 3; i++) {
     document.getElementById('med'+i).checked = false;
     document.getElementById('dose'+i).value = '';
     document.getElementById('dose'+i).disabled = true;
+    document.getElementById('med-row'+i).classList.remove('checked');
   }
   document.getElementById('memo').value = '';
 }
 
-// ===== Tab =====
 function showTab(t, btn) {
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+t).classList.add('active');
@@ -536,73 +510,69 @@ function showTab(t, btn) {
   if (t==='settings') updateRecordCount();
 }
 
-// ===== Charts =====
 function renderCharts() {
   const recent = records.slice(-14);
   const labels = recent.map(r => new Date(r.datetime).toLocaleDateString('ja-JP',{month:'numeric',day:'numeric'}));
-  const pressures = recent.map(r => r.pressure ?? null);
-  const pains = recent.map(r => r.pain);
-
   if (charts.main) charts.main.destroy();
   charts.main = new Chart(document.getElementById('mainChart'), {
-    type: 'line',
-    data: {
+    type:'line',
+    data:{
       labels,
-      datasets: [
-        { label:'気圧', data:pressures, borderColor:'#2a78d6', backgroundColor:'rgba(42,120,214,0.06)', borderWidth:2, tension:0.35, yAxisID:'y1', pointRadius:4, pointBackgroundColor:'#2a78d6' },
-        { label:'頭痛', data:pains, borderColor:'#e34948', backgroundColor:'rgba(227,73,72,0.06)', borderWidth:2, tension:0.35, yAxisID:'y2', pointRadius:4, pointBackgroundColor:'#e34948', borderDash:[5,4] }
+      datasets:[
+        {label:'気圧',data:recent.map(r=>r.pressure??null),borderColor:'#e8630a',backgroundColor:'rgba(232,99,10,0.08)',borderWidth:2.5,tension:0.35,yAxisID:'y1',pointRadius:5,pointBackgroundColor:'#e8630a',pointBorderColor:'#fff',pointBorderWidth:2},
+        {label:'頭痛',data:recent.map(r=>r.pain),borderColor:'#e03020',backgroundColor:'rgba(224,48,32,0.07)',borderWidth:2.5,tension:0.35,yAxisID:'y2',pointRadius:5,pointBackgroundColor:'#e03020',pointBorderColor:'#fff',pointBorderWidth:2,borderDash:[5,4]}
       ]
     },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ display:false } },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
       scales:{
-        y1:{ type:'linear', position:'left', title:{ display:true, text:'hPa', color:'#2a78d6', font:{size:11} }, grid:{ color:'rgba(128,128,128,0.1)' }, ticks:{ color:'#888', font:{size:11} } },
-        y2:{ type:'linear', position:'right', min:0, max:10, title:{ display:true, text:'スコア', color:'#e34948', font:{size:11} }, grid:{ display:false }, ticks:{ color:'#e34948', font:{size:11}, stepSize:2 } },
-        x:{ grid:{ display:false }, ticks:{ color:'#888', font:{size:10}, autoSkip:false, maxRotation:45 } }
+        y1:{type:'linear',position:'left',title:{display:true,text:'hPa',color:'#e8630a',font:{size:11}},grid:{color:'rgba(232,99,10,0.08)'},ticks:{color:'#b07840',font:{size:11}}},
+        y2:{type:'linear',position:'right',min:0,max:10,title:{display:true,text:'スコア',color:'#e03020',font:{size:11}},grid:{display:false},ticks:{color:'#e03020',font:{size:11},stepSize:2}},
+        x:{grid:{display:false},ticks:{color:'#b07840',font:{size:10},autoSkip:false,maxRotation:45}}
       }
     }
   });
 
-  // 服薬グラフ
-  const ago30 = new Date(Date.now() - 30*86400000);
-  const medCount = {};
-  MEDS.forEach(m => medCount[m] = 0);
-  records.filter(r => new Date(r.datetime) > ago30).forEach(r => r.meds?.forEach(m => { if (medCount[m.name] !== undefined) medCount[m.name]++; }));
-
+  const ago30 = new Date(Date.now()-30*86400000);
+  const medCount={};
+  MEDS.forEach(m=>medCount[m]=0);
+  records.filter(r=>new Date(r.datetime)>ago30).forEach(r=>r.meds?.forEach(m=>{if(medCount[m.name]!==undefined)medCount[m.name]++}));
   if (charts.med) charts.med.destroy();
-  charts.med = new Chart(document.getElementById('medChart'), {
-    type: 'bar',
-    data: {
-      labels: MEDS,
-      datasets: [{ label:'回数', data: MEDS.map(m=>medCount[m]), backgroundColor:['#2a78d6','#4ab87a','#f5a623'], borderRadius:6, borderSkipped:false }]
-    },
-    options: {
-      indexAxis:'y', responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ display:false } },
+  charts.med = new Chart(document.getElementById('medChart'),{
+    type:'bar',
+    data:{labels:MEDS,datasets:[{label:'回数',data:MEDS.map(m=>medCount[m]),backgroundColor:['#e8630a','#f5c200','#f09000'],borderRadius:8,borderSkipped:false}]},
+    options:{
+      indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
       scales:{
-        x:{ beginAtZero:true, ticks:{ stepSize:1, color:'#888', font:{size:11} }, grid:{ color:'rgba(128,128,128,0.1)' } },
-        y:{ ticks:{ color:'#888', font:{size:12} }, grid:{ display:false } }
+        x:{beginAtZero:true,ticks:{stepSize:1,color:'#b07840',font:{size:11}},grid:{color:'rgba(232,99,10,0.08)'}},
+        y:{ticks:{color:'#6b3d10',font:{size:12}},grid:{display:false}}
       }
     }
   });
 }
 
-// ===== Log =====
 function renderLog() {
   const el = document.getElementById('log-list');
-  if (!records.length) { el.innerHTML = '<div class="empty"><i class="ti ti-clipboard-text"></i>まだ記録がありません</div>'; return; }
+  if (!records.length) { el.innerHTML='<div class="empty"><i class="ti ti-clipboard-text"></i>まだ記録がありません</div>'; return; }
   el.innerHTML = [...records].reverse().map(r => {
     const dt = new Date(r.datetime);
-    const ds = dt.toLocaleDateString('ja-JP',{month:'numeric',day:'numeric',weekday:'short'}) + ' ' + dt.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
-    const meds = r.meds?.length ? r.meds.map(m=>m.name+(m.dose?' '+m.dose:'')).join('、') : '服薬なし';
-    const details = [r.type, r.loc, r.pressure ? `気圧 ${r.pressure} hPa` : null, meds].filter(Boolean).join(' · ');
+    const dateStr = dt.toLocaleDateString('ja-JP',{year:'numeric',month:'numeric',day:'numeric',weekday:'short'});
+    const timeStr = dt.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+    const meds = r.meds?.length ? r.meds.map(m=>m.name+(m.dose?' '+m.dose:'')).join('・') : '服薬なし';
+    const details = [
+      r.type  ? `種類：${r.type}` : null,
+      r.loc   ? `部位：${r.loc}` : null,
+      r.pressure ? `気圧：${r.pressure} hPa` : null,
+      `服薬：${meds}`
+    ].filter(Boolean).join('\n');
     return `<div class="log-item">
       <div class="score-circle sc-${r.pain}">${r.pain}</div>
       <div>
-        <div class="log-date">${ds}</div>
-        <div class="log-detail">${details}</div>
-        ${r.memo ? `<div class="log-memo">${r.memo}</div>` : ''}
+        <div class="log-datetime">${dateStr} ${timeStr}</div>
+        <div class="log-detail" style="white-space:pre-line">${details}</div>
+        ${r.memo?`<div class="log-memo">📝 ${r.memo}</div>`:''}
       </div>
       <button class="del-btn" onclick="deleteRecord(${r.id})" aria-label="削除"><i class="ti ti-x"></i></button>
     </div>`;
@@ -611,48 +581,45 @@ function renderLog() {
 
 function deleteRecord(id) {
   if (!confirm('この記録を削除しますか？')) return;
-  records = records.filter(r => r.id !== id);
-  localStorage.setItem('ht_records', JSON.stringify(records));
-  renderLog();
-  updateRecordCount();
+  records = records.filter(r=>r.id!==id);
+  localStorage.setItem('ht_records',JSON.stringify(records));
+  renderLog(); updateRecordCount();
 }
 
-// ===== Settings =====
 function updateRecordCount() {
   document.getElementById('record-count').textContent = `現在 ${records.length} 件の記録`;
 }
 
 function exportCSV() {
-  const rows = [['日時','気圧(hPa)','緯度','経度','頭痛スコア','種類','部位','服薬','メモ']];
-  records.forEach(r => rows.push([
-    r.datetime, r.pressure ?? '', r.lat ?? '', r.lon ?? '',
-    r.pain, r.type ?? '', r.loc ?? '',
-    r.meds?.map(m=>m.name+(m.dose?' '+m.dose:'')).join('/') ?? '',
-    r.memo ?? ''
+  const rows=[['日時','気圧(hPa)','緯度','経度','頭痛スコア','種類','部位','服薬','メモ']];
+  records.forEach(r=>rows.push([
+    new Date(r.datetime).toLocaleString('ja-JP'),
+    r.pressure??'',r.lat??'',r.lon??'',
+    r.pain,r.type??'',r.loc??'',
+    r.meds?.map(m=>m.name+(m.dose?' '+m.dose:'')).join('/')?? '',
+    r.memo??''
   ]));
-  const csv = rows.map(r => r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
-  a.download = `headache_log_${new Date().toISOString().slice(0,10)}.csv`;
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download=`headache_log_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
 }
 
 function clearData() {
   if (!confirm(`全 ${records.length} 件の記録を削除しますか？\nこの操作は元に戻せません。`)) return;
-  records = [];
+  records=[];
   localStorage.removeItem('ht_records');
   showToast('削除しました');
   updateRecordCount();
 }
 
-// ===== Toast =====
 function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2200);
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
 }
 
-// ===== Service Worker =====
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
