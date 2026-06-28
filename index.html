@@ -366,6 +366,26 @@ textarea:focus{outline:none;border-color:var(--orange)}
     <!-- 設定 -->
     <div id="screen-settings" class="screen">
       <div class="pc-single">
+
+        <!-- PDFレポート -->
+        <div class="card">
+          <div class="card-title"><i class="ti ti-file-type-pdf"></i>医療機関向けPDFレポート</div>
+          <div style="font-size:13px;color:var(--text-sub);margin-bottom:14px">期間を指定して頭痛記録のレポートを作成します。かかりつけ医への受診時にお使いください。</div>
+          <div class="datetime-inputs" style="margin-bottom:12px">
+            <div>
+              <div class="flabel">開始日</div>
+              <input type="date" id="pdf-start">
+            </div>
+            <div>
+              <div class="flabel">終了日</div>
+              <input type="date" id="pdf-end">
+            </div>
+          </div>
+          <button class="save-btn" onclick="generatePDF()" style="margin-top:0">
+            <i class="ti ti-file-type-pdf"></i>PDFレポートを作成
+          </button>
+        </div>
+
         <div class="card">
           <div class="card-title"><i class="ti ti-database"></i>データ管理</div>
           <div class="settings-row">
@@ -381,7 +401,7 @@ textarea:focus{outline:none;border-color:var(--orange)}
           <div class="card-title"><i class="ti ti-info-circle"></i>このアプリについて</div>
           <div class="settings-row"><div><div class="settings-label">気圧・天気データ</div><div class="settings-sub">Open-Meteo（無料・登録不要）</div></div></div>
           <div class="settings-row"><div><div class="settings-label">データ保存場所</div><div class="settings-sub">このデバイスのみ（サーバー送信なし）</div></div></div>
-          <div class="settings-row"><div><div class="settings-label">バージョン</div><div class="settings-sub">1.3.0</div></div></div>
+          <div class="settings-row"><div><div class="settings-label">バージョン</div><div class="settings-sub">1.4.0</div></div></div>
         </div>
       </div>
     </div>
@@ -723,6 +743,158 @@ function deleteRecord(id) {
 
 function updateRecordCount() {
   document.getElementById('record-count').textContent = `現在 ${records.length} 件の記録`;
+  // PDF期間のデフォルト：過去30日
+  const today = new Date();
+  const ago30 = new Date(Date.now() - 29*86400000);
+  const fmt = d => d.toISOString().slice(0,10);
+  const ps = document.getElementById('pdf-start');
+  const pe = document.getElementById('pdf-end');
+  if (ps && !ps.value) ps.value = fmt(ago30);
+  if (pe && !pe.value) pe.value = fmt(today);
+}
+
+function generatePDF() {
+  const startVal = document.getElementById('pdf-start').value;
+  const endVal   = document.getElementById('pdf-end').value;
+  if (!startVal || !endVal) { showToast('期間を指定してください'); return; }
+
+  const start = new Date(startVal);
+  const end   = new Date(endVal);
+  end.setHours(23,59,59,999);
+  if (start > end) { showToast('開始日が終了日より後になっています'); return; }
+
+  const filtered = records.filter(r => {
+    const d = new Date(r.datetime);
+    return d >= start && d <= end;
+  });
+
+  if (!filtered.length) { showToast('該当期間に記録がありません'); return; }
+
+  // 集計
+  const painMap  = { mild:'軽度', moderate:'中程度', severe:'重度' };
+  const faceMap  = { mild:'😐', moderate:'😣', severe:'😫' };
+  const totalDays = Math.round((end - start) / 86400000) + 1;
+  const headacheCount = filtered.length;
+  const medCount = {};
+  MEDS.forEach(m => medCount[m] = 0);
+  filtered.forEach(r => r.meds?.forEach(m => { if(medCount[m.name]!==undefined) medCount[m.name]++; }));
+  const severeCnt   = filtered.filter(r=>r.pain==='severe').length;
+  const moderateCnt = filtered.filter(r=>r.pain==='moderate').length;
+  const mildCnt     = filtered.filter(r=>r.pain==='mild').length;
+
+  // 服薬グラフSVG（横棒）
+  const maxMed = Math.max(...Object.values(medCount), 1);
+  const barW = 200;
+  const medBarsSVG = MEDS.map((m,i) => {
+    const w = Math.round((medCount[m]/maxMed)*barW);
+    const y = i*36;
+    const colors = ['#e8630a','#f09000','#f5c200'];
+    return `<g transform="translate(0,${y})">
+      <text x="0" y="14" font-size="11" fill="#4a3010" font-family="sans-serif">${m}</text>
+      <rect x="0" y="18" width="${w}" height="14" rx="4" fill="${colors[i]}"/>
+      <text x="${w+6}" y="30" font-size="11" fill="#4a3010" font-family="sans-serif">${medCount[m]}回</text>
+    </g>`;
+  }).join('');
+
+  // 記録一覧HTML
+  const rows = filtered.slice().reverse().map(r => {
+    const dt = new Date(r.datetime);
+    const ds = dt.toLocaleDateString('ja-JP',{year:'numeric',month:'numeric',day:'numeric',weekday:'short'})
+             + ' ' + dt.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+    const pain = painMap[r.pain] || (r.pain!==null ? String(r.pain) : '--');
+    const face = faceMap[r.pain] || '';
+    const meds = r.meds?.length ? r.meds.map(m=>m.name).join('・') : 'なし';
+    return `<tr>
+      <td>${ds}</td>
+      <td style="text-align:center">${face} ${pain}</td>
+      <td>${r.type||'--'}</td>
+      <td>${r.loc||'--'}</td>
+      <td>${meds}</td>
+      <td>${r.pressure ? r.pressure+'hPa' : '--'}</td>
+      <td>${r.memo||''}</td>
+    </tr>`;
+  }).join('');
+
+  const periodStr = `${start.toLocaleDateString('ja-JP')} 〜 ${new Date(endVal).toLocaleDateString('ja-JP')}`;
+  const createdStr = new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'});
+
+  const html = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>頭痛記録レポート ${periodStr}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN',Meiryo,sans-serif;font-size:12px;color:#1c2b3a;background:#fff;padding:20mm 15mm}
+  h1{font-size:20px;color:#e8630a;border-bottom:3px solid #e8630a;padding-bottom:8px;margin-bottom:6px}
+  .meta{font-size:11px;color:#666;margin-bottom:20px}
+  .section{margin-bottom:24px}
+  .section-title{font-size:14px;font-weight:700;color:#e8630a;border-left:4px solid #e8630a;padding-left:8px;margin-bottom:12px}
+  .summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:8px}
+  .summary-box{background:#fff8f0;border:1.5px solid #f5c090;border-radius:10px;padding:12px;text-align:center}
+  .summary-num{font-size:28px;font-weight:800;color:#e8630a;line-height:1}
+  .summary-label{font-size:10px;color:#6b3d10;margin-top:4px}
+  .pain-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+  .pain-box{border-radius:8px;padding:10px;text-align:center;font-size:11px;font-weight:700}
+  .pain-mild{background:#edfaf2;color:#1a6030}
+  .pain-moderate{background:#fff4d6;color:#7a4800}
+  .pain-severe{background:#fff0ee;color:#a01800}
+  .pain-face{font-size:22px;display:block;margin-bottom:4px}
+  table{width:100%;border-collapse:collapse;font-size:11px}
+  th{background:#e8630a;color:#fff;padding:6px 8px;text-align:left;font-weight:700}
+  td{padding:5px 8px;border-bottom:0.5px solid #f0d8c0;vertical-align:top}
+  tr:nth-child(even) td{background:#fff8f0}
+  .footer{margin-top:24px;font-size:10px;color:#999;text-align:right;border-top:0.5px solid #ddd;padding-top:8px}
+  @media print{body{padding:10mm 10mm}}
+</style>
+</head>
+<body>
+<h1>🧠 頭痛記録レポート</h1>
+<div class="meta">集計期間：${periodStr}　／　作成日：${createdStr}　／　対象記録：${headacheCount}件</div>
+
+<div class="section">
+  <div class="section-title">サマリー</div>
+  <div class="summary-grid">
+    <div class="summary-box"><div class="summary-num">${totalDays}</div><div class="summary-label">集計日数</div></div>
+    <div class="summary-box"><div class="summary-num">${headacheCount}</div><div class="summary-label">頭痛記録数</div></div>
+    <div class="summary-box"><div class="summary-num">${Object.values(medCount).reduce((a,b)=>a+b,0)}</div><div class="summary-label">総服薬回数</div></div>
+    <div class="summary-box"><div class="summary-num">${(headacheCount/totalDays*7).toFixed(1)}</div><div class="summary-label">週平均頭痛回数</div></div>
+  </div>
+  <div class="pain-summary">
+    <div class="pain-box pain-mild"><span class="pain-face">😐</span>軽度：${mildCnt}回</div>
+    <div class="pain-box pain-moderate"><span class="pain-face">😣</span>中程度：${moderateCnt}回</div>
+    <div class="pain-box pain-severe"><span class="pain-face">😫</span>重度：${severeCnt}回</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">服薬回数</div>
+  <svg width="320" height="108" viewBox="0 0 320 108">
+    ${medBarsSVG}
+  </svg>
+</div>
+
+<div class="section">
+  <div class="section-title">記録一覧</div>
+  <table>
+    <thead><tr>
+      <th>日時</th><th>強さ</th><th>種類</th><th>部位</th><th>服薬</th><th>気圧</th><th>メモ</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+</div>
+
+<div class="footer">頭痛きろく アプリ by MH_TRACE — このレポートはご自身の記録データから自動生成されました</div>
+</body>
+</html>`;
+
+  // 印刷ウィンドウで開く
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+  win.addEventListener('load', () => {
+    setTimeout(() => win.print(), 500);
+  });
 }
 
 function exportCSV() {
