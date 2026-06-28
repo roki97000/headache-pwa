@@ -237,10 +237,10 @@ textarea:focus{outline:none;border-color:var(--orange)}
   .sidebar-btn:hover{background:var(--orange-light);color:var(--orange-dark)}
   .sidebar-btn.active{background:var(--orange);color:#fff}
   .pc-layout{display:flex;min-height:calc(100dvh - 60px)}
-  .pc-main{flex:1;padding:24px;overflow-y:auto}
-  .pc-record-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
-  .pc-chart-grid{display:grid;grid-template-columns:3fr 2fr;gap:20px;align-items:start}
-  .pc-single{max-width:720px}
+  .pc-main{flex:1;padding:24px 32px;overflow-y:auto;max-width:1200px;margin:0 auto}
+  .pc-record-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+  .pc-chart-grid{display:grid;grid-template-columns:3fr 2fr;gap:24px;align-items:start}
+  .pc-single{max-width:800px;margin:0 auto}
   .content{padding:0}
   .screen{display:none}.screen.active{display:block}
 }
@@ -623,27 +623,58 @@ function toggleMed(i) {
   else row.classList.remove('checked');
 }
 
-function saveRecord() {
+async function saveRecord() {
   if (state.pain === null) { showToast('頭痛の強さを選んでください'); return; }
   const meds = [];
   for (let i = 0; i < 3; i++) {
     const cb = document.getElementById('med'+i);
     if (cb.checked) meds.push({ name: MEDS[i] });
   }
-  // 日時：ピッカーが表示中なら入力値を使用、そうでなければ現在時刻
-  let datetime;
+  // 日時判定
   const picker = document.getElementById('datetime-picker');
   const dateVal = document.getElementById('rec-date').value;
   const timeVal = document.getElementById('rec-time').value;
-  if (picker.style.display !== 'none' && dateVal && timeVal) {
-    datetime = new Date(`${dateVal}T${timeVal}`).toISOString();
-  } else {
-    datetime = new Date().toISOString();
+  const isCustom = picker.style.display !== 'none' && dateVal && timeVal;
+  const datetime = isCustom
+    ? new Date(`${dateVal}T${timeVal}`).toISOString()
+    : new Date().toISOString();
+
+  // 気圧・警戒レベルの取得
+  let pressure = currentPressure;
+  let alertLevel = null;
+  if (isCustom && (geoCoords || true)) {
+    // 事後記録：指定日時の過去気圧をOpen-Meteoから取得
+    showToast('指定日時の気圧を取得中…');
+    const lat = geoCoords?.lat ?? 34.9565;
+    const lon = geoCoords?.lon ?? 137.1651;
+    const dt = new Date(`${dateVal}T${timeVal}`);
+    const dateStr = dateVal;
+    try {
+      const r = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+        `&hourly=surface_pressure&timezone=Asia%2FTokyo` +
+        `&start_date=${dateStr}&end_date=${dateStr}`
+      );
+      const d = await r.json();
+      const hour = dt.getHours();
+      if (d.hourly?.surface_pressure?.[hour] != null) {
+        pressure = Math.round(d.hourly.surface_pressure[hour] * 10) / 10;
+      }
+    } catch(e) {
+      console.warn('過去気圧取得失敗:', e);
+    }
   }
+  // 警戒レベルを計算して文字列で保存
+  if (pressure !== null) {
+    const lv = calcAlertLevel(pressure);
+    alertLevel = lv.text.replace(/[⚠🔶🔸✅]\s*/g, '').trim();
+  }
+
   const rec = {
     id: Date.now(),
     datetime,
-    pressure: currentPressure,
+    pressure,
+    alertLevel,
     lat: geoCoords?.lat ?? null,
     lon: geoCoords?.lon ?? null,
     pain: state.pain, type: state.type, loc: state.loc, meds,
@@ -789,7 +820,7 @@ function renderLog() {
       `強さ：${painLabel}`,
       r.type  ? `種類：${r.type}` : null,
       r.loc   ? `部位：${r.loc}` : null,
-      r.pressure ? `気圧：${r.pressure} hPa` : null,
+      r.pressure ? `気圧：${r.pressure} hPa${r.alertLevel ? '（'+r.alertLevel+'）' : ''}` : null,
       `服薬：${meds}`
     ].filter(Boolean).join('\n');
     const scClass = r.pain==='mild'?'sc-2':r.pain==='moderate'?'sc-5':r.pain==='severe'?'sc-9':'sc-5';
