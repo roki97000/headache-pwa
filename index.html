@@ -406,8 +406,8 @@ textarea:focus{outline:none;border-color:var(--orange)}
             <canvas id="mainChart" role="img" aria-label="気圧と頭痛スコアの折れ線グラフ">気圧と頭痛スコアの推移</canvas>
           </div>
           <div style="display:flex;gap:16px;margin-top:10px;font-size:12px;color:var(--text-muted)">
-            <span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:4px;background:#e8630a;border-radius:2px;display:inline-block"></span>気圧 (hPa)</span>
-            <span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:4px;background:#e03020;border-radius:2px;display:inline-block"></span>頭痛スコア</span>
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:4px;background:#2a78d6;border-radius:2px;display:inline-block"></span>気圧 (hPa)</span>
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:4px;background:#e03020;border-radius:2px;display:inline-block"></span>頭痛（軽／中／重）</span>
           </div>
         </div>
         <div class="card">
@@ -861,7 +861,7 @@ function renderCalendar() {
         min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:2px;
       ">
         <div style="font-size:13px;${todayStyle}color:${numColor}">${d}</div>
-        ${recs.length ? `<div style="font-size:9px;color:${borderColor};font-weight:700">${recs.length}件</div>` : ''}
+
       </div>`);
   }
   document.getElementById('cal-detail').style.display='none';
