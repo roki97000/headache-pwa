@@ -101,6 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Hiragino Kaku Gothic ProN',Meiryo,sans-serif;background:var(--bg);color:var(--text);font-size:16px;-webkit-font-smoothing:antialiased}
 .app{max-width:480px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;padding-bottom:72px}
+@media(min-width:768px){.app{max-width:100%;margin:0}}
 
 /* ヘッダー */
 .header{background:var(--orange);color:#fff;padding:14px 16px 12px;display:flex;align-items:center;justify-content:space-between}
@@ -650,11 +651,12 @@ async function saveRecord() {
     const dt = new Date(`${dateVal}T${timeVal}`);
     const dateStr = dateVal;
     try {
-      const r = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
-        `&hourly=surface_pressure&timezone=Asia%2FTokyo` +
-        `&start_date=${dateStr}&end_date=${dateStr}`
-      );
+      // 過去7日以内はforecast、それ以前はarchive APIを使用
+      const diffDays = (Date.now() - dt.getTime()) / 86400000;
+      const endpoint = diffDays <= 7
+        ? `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=surface_pressure&timezone=Asia%2FTokyo&start_date=${dateStr}&end_date=${dateStr}`
+        : `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&hourly=surface_pressure&timezone=Asia%2FTokyo&start_date=${dateStr}&end_date=${dateStr}`;
+      const r = await fetch(endpoint);
       const d = await r.json();
       const hour = dt.getHours();
       if (d.hourly?.surface_pressure?.[hour] != null) {
@@ -667,7 +669,7 @@ async function saveRecord() {
   // 警戒レベルを計算して文字列で保存
   if (pressure !== null) {
     const lv = calcAlertLevel(pressure);
-    alertLevel = lv.text.replace(/[⚠🔶🔸✅]\s*/g, '').trim();
+    alertLevel = lv.text.replace(/[⚠🔶🔸✅] */g, '').trim();
   }
 
   const rec = {
