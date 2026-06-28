@@ -12,6 +12,66 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAb92gcHG-Ui_9JNLz16zXbWBRZlG4baXs",
+  authDomain: "headache-pwa.firebaseapp.com",
+  projectId: "headache-pwa",
+  storageBucket: "headache-pwa.firebasestorage.app",
+  messagingSenderId: "628550584006",
+  appId: "1:628550584006:web:f6c3400ac05152456379c7"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+window._db = db;
+window._fsLib = { collection, addDoc, getDocs, deleteDoc, doc, query, orderBy };
+
+// Firestoreから記録を読み込む
+async function loadFromFirestore() {
+  try {
+    const q = query(collection(db, 'records'), orderBy('datetime'));
+    const snap = await getDocs(q);
+    const loaded = [];
+    snap.forEach(d => loaded.push({ ...d.data(), _fsId: d.id }));
+    if (loaded.length > 0) {
+      window._records = loaded;
+      localStorage.setItem('ht_records', JSON.stringify(loaded));
+      if (window._refreshUI) window._refreshUI();
+    }
+  } catch(e) {
+    console.warn('Firestore読み込みエラー:', e);
+  }
+}
+
+window._loadFromFirestore = loadFromFirestore;
+window._saveToFirestore = async function(rec) {
+  try {
+    const { addDoc, collection } = window._fsLib;
+    const docRef = await addDoc(collection(db, 'records'), rec);
+    return docRef.id;
+  } catch(e) {
+    console.warn('Firestore保存エラー:', e);
+    return null;
+  }
+};
+window._deleteFromFirestore = async function(fsId) {
+  try {
+    const { deleteDoc, doc } = window._fsLib;
+    await deleteDoc(doc(db, 'records', fsId));
+  } catch(e) {
+    console.warn('Firestore削除エラー:', e);
+  }
+};
+
+// DOM読み込み後に実行
+document.addEventListener('DOMContentLoaded', () => {
+  if (window._loadFromFirestore) window._loadFromFirestore();
+});
+</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -193,6 +253,9 @@ textarea:focus{outline:none;border-color:var(--orange)}
     <div>
       <h1>🧠 頭痛きろく</h1>
       <div class="header-date" id="today-date"></div>
+    </div>
+    <div style="font-size:11px;opacity:0.85;display:flex;align-items:center;gap:4px">
+      <i class="ti ti-cloud" style="font-size:14px"></i>クラウド同期中
     </div>
   </div>
 
@@ -587,12 +650,20 @@ function saveRecord() {
     memo: document.getElementById('memo').value.trim()
   };
   records.push(rec);
-  // 日時順に並び替えて保存
   records.sort((a,b) => new Date(a.datetime) - new Date(b.datetime));
   localStorage.setItem('ht_records', JSON.stringify(records));
   showToast('記録しました ✓');
   resetForm();
   updateRecordCount();
+  // Firestoreにも保存
+  if (window._saveToFirestore) {
+    window._saveToFirestore(rec).then(fsId => {
+      if (fsId) {
+        rec._fsId = fsId;
+        localStorage.setItem('ht_records', JSON.stringify(records));
+      }
+    });
+  }
 }
 
 // 日時ピッカー
@@ -736,9 +807,14 @@ function renderLog() {
 
 function deleteRecord(id) {
   if (!confirm('この記録を削除しますか？')) return;
+  const rec = records.find(r=>r.id===id);
   records = records.filter(r=>r.id!==id);
   localStorage.setItem('ht_records',JSON.stringify(records));
   renderLog(); updateRecordCount();
+  // Firestoreからも削除
+  if (rec?._fsId && window._deleteFromFirestore) {
+    window._deleteFromFirestore(rec._fsId);
+  }
 }
 
 function updateRecordCount() {
@@ -926,6 +1002,17 @@ function showToast(msg) {
   t.textContent=msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2200);
 }
+
+// Firestore読み込み後のUI更新
+window._refreshUI = function() {
+  if (window._records) {
+    records = window._records;
+    updateRecordCount();
+    // 現在表示中のタブを更新
+    if (document.getElementById('screen-log').classList.contains('active')) renderLog();
+    if (document.getElementById('screen-chart').classList.contains('active')) renderCharts();
+  }
+};
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(()=>{});
