@@ -268,6 +268,7 @@ textarea:focus{outline:none;border-color:var(--orange)}
     <nav class="sidebar" id="sidebar" style="display:none">
       <button class="sidebar-btn active" onclick="showTab('record',this)"><i class="ti ti-pencil"></i>記録</button>
       <button class="sidebar-btn" onclick="showTab('chart',this)"><i class="ti ti-chart-line"></i>グラフ</button>
+      <button class="sidebar-btn" onclick="showTab('calendar',this)"><i class="ti ti-calendar"></i>カレンダー</button>
       <button class="sidebar-btn" onclick="showTab('log',this)"><i class="ti ti-list"></i>履歴</button>
       <button class="sidebar-btn" onclick="showTab('settings',this)"><i class="ti ti-settings"></i>設定</button>
     </nav>
@@ -357,13 +358,12 @@ textarea:focus{outline:none;border-color:var(--orange)}
         <div class="form-block">
           <div class="flabel">痛みの部位</div>
           <div class="chip-grid">
-            <button class="chip" data-group="loc" data-val="前頭部">前頭部</button>
-            <button class="chip" data-group="loc" data-val="側頭部（右）">側頭部（右）</button>
-            <button class="chip" data-group="loc" data-val="側頭部（左）">側頭部（左）</button>
-            <button class="chip" data-group="loc" data-val="後頭部">後頭部</button>
             <button class="chip" data-group="loc" data-val="目の奥">目の奥</button>
+            <button class="chip" data-group="loc" data-val="右こめかみ">右こめかみ</button>
+            <button class="chip" data-group="loc" data-val="左こめかみ">左こめかみ</button>
             <button class="chip" data-group="loc" data-val="首筋">首筋</button>
             <button class="chip" data-group="loc" data-val="全体">全体</button>
+            <button class="chip" data-group="loc" data-val="その他">その他</button>
             <button class="chip" data-group="loc" data-val="その他">その他</button>
           </div>
         </div>
@@ -415,6 +415,39 @@ textarea:focus{outline:none;border-color:var(--orange)}
           <div class="chart-wrap" style="height:200px">
             <canvas id="medChart" role="img" aria-label="服薬回数の棒グラフ">服薬回数</canvas>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- カレンダー -->
+    <div id="screen-calendar" class="screen">
+      <div class="pc-single">
+        <div class="card">
+          <div class="card-title"><i class="ti ti-calendar"></i>月別カレンダー</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <button onclick="calPrev()" style="border:none;background:none;font-size:22px;cursor:pointer;color:var(--orange);padding:4px 8px">‹</button>
+            <div id="cal-title" style="font-size:16px;font-weight:700;color:var(--text)"></div>
+            <button onclick="calNext()" style="border:none;background:none;font-size:22px;cursor:pointer;color:var(--orange);padding:4px 8px">›</button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px">
+            <div style="text-align:center;font-size:11px;font-weight:700;color:#e03020;padding:4px">日</div>
+            <div style="text-align:center;font-size:11px;font-weight:700;color:var(--text-muted);padding:4px">月</div>
+            <div style="text-align:center;font-size:11px;font-weight:700;color:var(--text-muted);padding:4px">火</div>
+            <div style="text-align:center;font-size:11px;font-weight:700;color:var(--text-muted);padding:4px">水</div>
+            <div style="text-align:center;font-size:11px;font-weight:700;color:var(--text-muted);padding:4px">木</div>
+            <div style="text-align:center;font-size:11px;font-weight:700;color:var(--text-muted);padding:4px">金</div>
+            <div style="text-align:center;font-size:11px;font-weight:700;color:#2a78d6;padding:4px">土</div>
+          </div>
+          <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px"></div>
+          <div style="display:flex;gap:12px;margin-top:12px;font-size:11px;color:var(--text-muted)">
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:#edfaf2;border:1.5px solid #2e9e50;display:inline-block"></span>軽度</span>
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:#fff4d6;border:1.5px solid #f09000;display:inline-block"></span>中程度</span>
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:#fff0ee;border:1.5px solid #e03020;display:inline-block"></span>重度</span>
+          </div>
+        </div>
+        <div class="card" id="cal-detail" style="display:none">
+          <div class="card-title"><i class="ti ti-list"></i><span id="cal-detail-date"></span>の記録</div>
+          <div id="cal-detail-list"></div>
         </div>
       </div>
     </div>
@@ -481,6 +514,7 @@ textarea:focus{outline:none;border-color:var(--orange)}
 <nav class="bottom-nav">
   <button class="nav-btn active" onclick="showTab('record',this)"><i class="ti ti-pencil"></i>記録</button>
   <button class="nav-btn" onclick="showTab('chart',this)"><i class="ti ti-chart-line"></i>グラフ</button>
+  <button class="nav-btn" onclick="showTab('calendar',this)"><i class="ti ti-calendar"></i>カレンダー</button>
   <button class="nav-btn" onclick="showTab('log',this)"><i class="ti ti-list"></i>履歴</button>
   <button class="nav-btn" onclick="showTab('settings',this)"><i class="ti ti-settings"></i>設定</button>
 </nav>
@@ -763,8 +797,99 @@ function showTab(t, btn) {
   const matchSide = document.querySelector(`.sidebar-btn[onclick*="'${t}'"]`);
   if (matchSide) matchSide.classList.add('active');
   if (t==='chart') renderCharts();
+  if (t==='calendar') renderCalendar();
   if (t==='log') renderLog();
   if (t==='settings') updateRecordCount();
+}
+
+// ===== カレンダー =====
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+
+function calPrev() { calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); }
+function calNext() { calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); }
+
+function renderCalendar() {
+  document.getElementById('cal-title').textContent =
+    `${calYear}年${calMonth+1}月`;
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML = '';
+
+  const first = new Date(calYear, calMonth, 1).getDay();
+  const days  = new Date(calYear, calMonth+1, 0).getDate();
+  const today = new Date();
+
+  // 当月の記録をdateKeyでまとめる
+  const recMap = {};
+  records.forEach(r => {
+    const d = new Date(r.datetime);
+    if (d.getFullYear()===calYear && d.getMonth()===calMonth) {
+      const key = d.getDate();
+      if (!recMap[key]) recMap[key] = [];
+      recMap[key].push(r);
+    }
+  });
+
+  // 空白マス
+  for (let i=0; i<first; i++) {
+    grid.insertAdjacentHTML('beforeend','<div></div>');
+  }
+
+  for (let d=1; d<=days; d++) {
+    const recs = recMap[d] || [];
+    const isToday = d===today.getDate() && calMonth===today.getMonth() && calYear===today.getFullYear();
+    const isSun = (first+d-1)%7===0;
+    const isSat = (first+d-1)%7===6;
+
+    // 最も重い頭痛で色決定
+    let bgColor='', borderColor='';
+    if (recs.length) {
+      const worst = recs.some(r=>r.pain==='severe') ? 'severe'
+                  : recs.some(r=>r.pain==='moderate') ? 'moderate' : 'mild';
+      bgColor   = worst==='severe'?'#fff0ee':worst==='moderate'?'#fff4d6':'#edfaf2';
+      borderColor = worst==='severe'?'#e03020':worst==='moderate'?'#f09000':'#2e9e50';
+    }
+
+    const numColor = isSun?'#e03020':isSat?'#2a78d6':'var(--text)';
+    const todayStyle = isToday ? 'font-weight:800;' : '';
+    const bgStyle = recs.length ? `background:${bgColor};border:1.5px solid ${borderColor};` : 'background:var(--bg);border:1px solid var(--border);';
+
+    grid.insertAdjacentHTML('beforeend', `
+      <div onclick="showCalDay(${d})" style="
+        ${bgStyle}
+        border-radius:8px;padding:6px 2px;text-align:center;cursor:${recs.length?'pointer':'default'};
+        min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:2px;
+      ">
+        <div style="font-size:13px;${todayStyle}color:${numColor}">${d}</div>
+        ${recs.length ? `<div style="font-size:9px;color:${borderColor};font-weight:700">${recs.length}件</div>` : ''}
+      </div>`);
+  }
+  document.getElementById('cal-detail').style.display='none';
+}
+
+function showCalDay(d) {
+  const recs = records.filter(r => {
+    const dt = new Date(r.datetime);
+    return dt.getFullYear()===calYear && dt.getMonth()===calMonth && dt.getDate()===d;
+  });
+  if (!recs.length) return;
+  const detail = document.getElementById('cal-detail');
+  document.getElementById('cal-detail-date').textContent = `${calMonth+1}/${d}`;
+  const painLabel = p => p==='mild'?'😐軽度':p==='moderate'?'😣中程度':p==='severe'?'😫重度':'--';
+  document.getElementById('cal-detail-list').innerHTML = recs.map(r => {
+    const t = new Date(r.datetime).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+    const meds = r.meds?.length ? r.meds.map(m=>m.name).join('・') : '服薬なし';
+    return `<div style="padding:8px 0;border-bottom:0.5px solid var(--border)">
+      <div style="font-size:12px;font-weight:700;color:var(--orange-dark)">${t}</div>
+      <div style="font-size:12px;color:var(--text-sub);margin-top:2px">
+        ${painLabel(r.pain)}　${r.type||''}　${r.loc||''}<br>
+        ${meds}　${r.pressure ? r.pressure+'hPa' : ''}
+      </div>
+      ${r.memo?`<div style="font-size:11px;color:var(--text-muted);margin-top:2px">📝 ${r.memo}</div>`:''}
+    </div>`;
+  }).join('');
+  detail.style.display='block';
+  detail.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
 // PC/スマホ切替
@@ -778,6 +903,13 @@ function handleResize() {
 window.addEventListener('resize', handleResize);
 handleResize();
 
+function painToNum(pain) {
+  if (pain === 'mild') return 1;
+  if (pain === 'moderate') return 2;
+  if (pain === 'severe') return 3;
+  return null;
+}
+
 function renderCharts() {
   const recent = records.slice(-14);
   const labels = recent.map(r => new Date(r.datetime).toLocaleDateString('ja-JP',{month:'numeric',day:'numeric'}));
@@ -787,17 +919,28 @@ function renderCharts() {
     data:{
       labels,
       datasets:[
-        {label:'気圧',data:recent.map(r=>r.pressure??null),borderColor:'#e8630a',backgroundColor:'rgba(232,99,10,0.08)',borderWidth:2.5,tension:0.35,yAxisID:'y1',pointRadius:5,pointBackgroundColor:'#e8630a',pointBorderColor:'#fff',pointBorderWidth:2},
-        {label:'頭痛',data:recent.map(r=>r.pain),borderColor:'#e03020',backgroundColor:'rgba(224,48,32,0.07)',borderWidth:2.5,tension:0.35,yAxisID:'y2',pointRadius:5,pointBackgroundColor:'#e03020',pointBorderColor:'#fff',pointBorderWidth:2,borderDash:[5,4]}
+        {label:'気圧',data:recent.map(r=>r.pressure??null),borderColor:'#2a78d6',backgroundColor:'rgba(42,120,214,0.08)',borderWidth:2.5,tension:0.35,yAxisID:'y1',pointRadius:5,pointBackgroundColor:'#2a78d6',pointBorderColor:'#fff',pointBorderWidth:2},
+        {label:'頭痛',data:recent.map(r=>painToNum(r.pain)),borderColor:'#e03020',backgroundColor:'rgba(224,48,32,0.1)',borderWidth:3,tension:0.35,yAxisID:'y2',pointRadius:7,pointBackgroundColor:'#e03020',pointBorderColor:'#fff',pointBorderWidth:2,borderDash:[6,3]}
       ]
     },
     options:{
       responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false}},
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{
+          label: ctx => {
+            if(ctx.dataset.label==='頭痛'){
+              const v = ctx.parsed.y;
+              return '頭痛: ' + (v===1?'軽度':v===2?'中程度':v===3?'重度':'--');
+            }
+            return `気圧: ${ctx.parsed.y} hPa`;
+          }
+        }}
+      },
       scales:{
-        y1:{type:'linear',position:'left',title:{display:true,text:'hPa',color:'#e8630a',font:{size:11}},grid:{color:'rgba(232,99,10,0.08)'},ticks:{color:'#b07840',font:{size:11}}},
-        y2:{type:'linear',position:'right',min:0,max:10,title:{display:true,text:'スコア',color:'#e03020',font:{size:11}},grid:{display:false},ticks:{color:'#e03020',font:{size:11},stepSize:2}},
-        x:{grid:{display:false},ticks:{color:'#b07840',font:{size:10},autoSkip:false,maxRotation:45}}
+        y1:{type:'linear',position:'left',title:{display:true,text:'hPa',color:'#2a78d6',font:{size:11}},grid:{color:'rgba(42,120,214,0.08)'},ticks:{color:'#2a78d6',font:{size:11}}},
+        y2:{type:'linear',position:'right',min:0,max:3,title:{display:true,text:'頭痛',color:'#e03020',font:{size:11}},grid:{display:false},ticks:{color:'#e03020',font:{size:11},stepSize:1,callback:v=>v===1?'軽':v===2?'中':v===3?'重':''}},
+        x:{grid:{display:false},ticks:{color:'#888',font:{size:10},autoSkip:false,maxRotation:45}}
       }
     }
   });
