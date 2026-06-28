@@ -933,13 +933,32 @@ function generatePDF() {
     const pain = painMap[r.pain] || (r.pain!==null ? String(r.pain) : '--');
     const face = faceMap[r.pain] || '';
     const meds = r.meds?.length ? r.meds.map(m=>m.name).join('・') : 'なし';
+    const pdfAlertEmoji = (lv) => {
+      if (!lv) return '';
+      if (lv.includes('警戒')) return '🔴 ';
+      if (lv.includes('やや注意')) return '🟠 ';
+      if (lv.includes('上昇注意')) return '🟡 ';
+      return '🟢 ';
+    };
+    const pdfAlertColor = (lv) => {
+      if (!lv) return '#666';
+      if (lv.includes('警戒')) return '#c0392b';
+      if (lv.includes('やや注意')) return '#b35a00';
+      if (lv.includes('上昇注意')) return '#7a6000';
+      return '#1e7e34';
+    };
+    const pressureCell = r.pressure
+      ? r.pressure + ' hPa' + (r.alertLevel
+          ? '<br><span style="font-size:10px;font-weight:700;color:' + pdfAlertColor(r.alertLevel) + '">' + pdfAlertEmoji(r.alertLevel) + r.alertLevel + '</span>'
+          : '')
+      : '--';
     return `<tr>
       <td>${ds}</td>
       <td style="text-align:center">${face} ${pain}</td>
       <td>${r.type||'--'}</td>
       <td>${r.loc||'--'}</td>
       <td>${meds}</td>
-      <td>${r.pressure ? r.pressure+'hPa' : '--'}</td>
+      <td>${pressureCell}</td>
       <td>${r.memo||''}</td>
     </tr>`;
   }).join('');
