@@ -971,11 +971,12 @@ function generatePDF() {
     const weatherCell = r.weatherIcon
       ? `${r.weatherIcon} ${r.weatherTemp ? r.weatherTemp+'°C' : ''}`
       : '--';
+    const typeLocCell = [r.type, r.loc].filter(Boolean).join('／') || '--';
+    const painShort = r.pain==='mild'?'😐軽':r.pain==='moderate'?'😣中':r.pain==='severe'?'😫重':'--';
     return `<tr>
       <td>${ds}</td>
-      <td style="text-align:center">${face} ${pain}</td>
-      <td>${r.type||'--'}</td>
-      <td>${r.loc||'--'}</td>
+      <td style="text-align:center;white-space:nowrap">${painShort}</td>
+      <td>${typeLocCell}</td>
       <td>${shortMeds}</td>
       <td style="white-space:nowrap;text-align:center">${weatherCell}</td>
       <td style="white-space:nowrap">${pressureCell}</td>
@@ -1046,7 +1047,7 @@ function generatePDF() {
   <div class="section-title">記録一覧</div>
   <table>
     <thead><tr>
-      <th>日時</th><th>強さ</th><th>種類</th><th>部位</th><th>服薬</th><th>天気</th><th>気圧・危険度</th><th>メモ</th>
+      <th>日時</th><th>強さ</th><th>種類・部位</th><th>服薬</th><th>天気</th><th>気圧・危険度</th><th>メモ</th>
     </tr></thead>
     <tbody>${rows}</tbody>
   </table>
