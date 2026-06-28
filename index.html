@@ -821,19 +821,36 @@ function renderLog() {
     const meds = r.meds?.length ? r.meds.map(m=>m.name).join('・') : '服薬なし';
     const painFace = r.pain==='mild'?'😐':r.pain==='moderate'?'😣':r.pain==='severe'?'😫': r.pain!==null&&r.pain!==undefined ? `スコア${r.pain}` : '--';
     const painLabel = r.pain==='mild'?'軽度':r.pain==='moderate'?'中程度':r.pain==='severe'?'重度': r.pain!==null&&r.pain!==undefined ? String(r.pain) : '--';
+    const alertColor = (level) => {
+      if (!level) return '#888';
+      if (level.includes('警戒')) return '#c0392b';
+      if (level.includes('やや注意')) return '#b35a00';
+      if (level.includes('上昇注意')) return '#7a6000';
+      return '#1e7e34';
+    };
+    const alertEmoji = (level) => {
+      if (!level) return '';
+      if (level.includes('警戒')) return '🔴 ';
+      if (level.includes('やや注意')) return '🟠 ';
+      if (level.includes('上昇注意')) return '🟡 ';
+      return '🟢 ';
+    };
+    const pressureHtml = r.pressure
+      ? `気圧：${r.pressure} hPa${r.alertLevel ? ' <span style="font-weight:700;color:'+alertColor(r.alertLevel)+'">'+alertEmoji(r.alertLevel)+r.alertLevel+'</span>' : ''}`
+      : null;
     const details = [
       `強さ：${painLabel}`,
       r.type  ? `種類：${r.type}` : null,
       r.loc   ? `部位：${r.loc}` : null,
-      r.pressure ? `気圧：${r.pressure} hPa${r.alertLevel ? '（'+r.alertLevel+'）' : ''}` : null,
+      pressureHtml,
       `服薬：${meds}`
-    ].filter(Boolean).join('\n');
+    ].filter(Boolean).join('<br>');
     const scClass = r.pain==='mild'?'sc-2':r.pain==='moderate'?'sc-5':r.pain==='severe'?'sc-9':'sc-5';
     return `<div class="log-item">
       <div class="score-circle ${scClass}" style="font-size:24px">${painFace}</div>
       <div>
         <div class="log-datetime">${dateStr} ${timeStr}</div>
-        <div class="log-detail" style="white-space:pre-line">${details}</div>
+        <div class="log-detail">${details}</div>
         ${r.memo?`<div class="log-memo">📝 ${r.memo}</div>`:''}
       </div>
       <button class="del-btn" onclick="deleteRecord(${r.id})" aria-label="削除"><i class="ti ti-x"></i></button>
