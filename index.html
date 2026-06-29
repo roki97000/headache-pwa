@@ -647,10 +647,16 @@ document.addEventListener('click', e => {
   const c = e.target.closest('.chip[data-group]');
   if (!c) return;
   const g = c.dataset.group;
-  document.querySelectorAll(`.chip[data-group="${g}"]`).forEach(x=>x.classList.remove('sel'));
-  c.classList.add('sel');
-  if (g==='type') state.type = c.dataset.val;
-  if (g==='loc')  state.loc  = c.dataset.val;
+  // 複数選択：トグル動作
+  c.classList.toggle('sel');
+  if (g==='type') {
+    const selected = [...document.querySelectorAll(`.chip[data-group="type"].sel`)].map(b=>b.dataset.val);
+    state.type = selected.length ? selected.join('・') : null;
+  }
+  if (g==='loc') {
+    const selected = [...document.querySelectorAll(`.chip[data-group="loc"].sel`)].map(b=>b.dataset.val);
+    state.loc = selected.length ? selected.join('・') : null;
+  }
 });
 
 function toggleMed(i) {
