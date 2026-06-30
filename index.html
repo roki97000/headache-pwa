@@ -583,101 +583,152 @@ let forecastChart = null;
 
 async function fetchForecast(lat, lon) {
   try {
-    const today = new Date().toISOString().slice(0,10);
-    const r = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
-      `&hourly=surface_pressure,temperature_2m,weather_code` +
-      `&timezone=Asia%2FTokyo&start_date=${today}&end_date=${today}`
-    );
-    const d = await r.json();
-    if (!d.hourly) return;
+    const now = new Date();
+    const past = new Date(now.getTime() - 12*3600*1000);
+    const future = new Date(now.getTime() + 24*3600*1000);
+    const fmt = d => d.toISOString().slice(0,10);
+    const startDate = fmt(past);
+    const endDate = fmt(future);
 
-    // 3時間刻みで抽出（0,3,6,9,12,15,18,21時）
-    const hours = [0,3,6,9,12,15,18,21];
-    const pressures = hours.map(h => Math.round(d.hourly.surface_pressure[h]*10)/10);
-    const temps     = hours.map(h => Math.round(d.hourly.temperature_2m[h]*10)/10);
-    const wcodes    = hours.map(h => d.hourly.weather_code[h]);
-    const labels    = hours.map(h => `${h}時`);
+    // 過去はarchive、未来はforecastの両方を取得
+    const [rFore, rArch] = await Promise.all([
+      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=surface_pressure,temperature_2m,weather_code&timezone=Asia%2FTokyo&start_date=${fmt(now)}&end_date=${fmt(future)}`),
+      fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&hourly=surface_pressure,temperature_2m,weather_code&timezone=Asia%2FTokyo&start_date=${startDate}&end_date=${fmt(now)}`)
+    ]);
+    const [dFore, dArch] = await Promise.all([rFore.json(), rArch.json()]);
 
-    // 気圧変化量から危険度計算（前3時間との差）
-    const dangers = pressures.map((p,i) => {
-      if (i===0) return Math.abs(p - pressures[1]);
-      const diff = Math.abs(p - pressures[i-1]);
-      return diff;
-    });
+    // 現在時刻の時間インデックス
+    const nowHour = now.getHours();
 
-    const dangerColor = diff => {
-      if (diff >= 2) return { color:'#e03020', label:'警戒', bg:'rgba(224,48,32,0.15)' };
-      if (diff >= 1.5) return { color:'#b35a00', label:'注意', bg:'rgba(179,90,0,0.15)' };
-      if (diff >= 0.8) return { color:'#7a6000', label:'やや注意', bg:'rgba(122,96,0,0.12)' };
-      return { color:'#2e9e50', label:'安定', bg:'rgba(46,158,80,0.08)' };
+    // 過去12時間（1時間刻み）
+    const pastHours = [];
+    for (let h = nowHour - 12; h < nowHour; h++) {
+      const absH = ((h % 24) + 24) % 24;
+      const dayOffset = h < 0 ? -1 : 0;
+      pastHours.push({ h: absH, dayOffset, isPast: true });
+    }
+    // 現在
+    pastHours.push({ h: nowHour, dayOffset: 0, isNow: true });
+    // 未来24時間（1時間刻み）
+    for (let h = nowHour + 1; h <= nowHour + 24; h++) {
+      const absH = h % 24;
+      const dayOffset = h >= 24 ? 1 : 0;
+      pastHours.push({ h: absH, dayOffset, isFuture: true });
+    }
+
+    // データ結合
+    const archTimes = dArch.hourly?.time || [];
+    const foreTimes = dFore.hourly?.time || [];
+
+    const getVal = (arr, times, targetTime) => {
+      const idx = times.findIndex(t => t === targetTime);
+      return idx >= 0 ? arr[idx] : null;
     };
 
-    // 天気アイコン行を描画
+    const nowDate = fmt(now);
+    const futureDate = fmt(future);
+    const yesterDate = fmt(past);
+
+    const slots = pastHours.map(slot => {
+      const dateStr = slot.dayOffset === -1 ? yesterDate : slot.dayOffset === 1 ? futureDate : nowDate;
+      const targetTime = `${dateStr}T${String(slot.h).padStart(2,'0')}:00`;
+      const src = slot.dayOffset >= 0 ? dFore : dArch;
+      const times = slot.dayOffset >= 0 ? foreTimes : archTimes;
+      return {
+        label: `${slot.h}時`,
+        isNow: slot.isNow || false,
+        isPast: slot.isPast || false,
+        pressure: getVal(src.hourly?.surface_pressure, times, targetTime),
+        temp: getVal(src.hourly?.temperature_2m, times, targetTime),
+        wcode: getVal(src.hourly?.weather_code, times, targetTime),
+      };
+    }).filter(s => s.pressure !== null);
+
+    // 3時間刻みに間引き（表示用）
+    const displaySlots = slots.filter((_,i) => i % 3 === 0);
+
+    const dangerLevel = (slots, i) => {
+      if (i === 0) return 0;
+      const diff = Math.abs(slots[i].pressure - slots[i-1].pressure);
+      return diff;
+    };
+
+    const dangerColor = diff => {
+      if (diff >= 2)   return { color:'#e03020', label:'警戒',    emoji:'🔴', bg:'rgba(224,48,32,0.12)' };
+      if (diff >= 1.5) return { color:'#b35a00', label:'注意',    emoji:'🟠', bg:'rgba(179,90,0,0.12)' };
+      if (diff >= 0.8) return { color:'#7a6000', label:'やや注意', emoji:'🟡', bg:'rgba(122,96,0,0.10)' };
+      return              { color:'#2e9e50', label:'安定',    emoji:'🟢', bg:'rgba(46,158,80,0.06)' };
+    };
+
+    // 天気・気温アイコン行（3時間刻み）
     const iconRow = document.getElementById('forecast-icons');
-    iconRow.innerHTML = hours.map((h,i) => {
-      const {icon} = weatherInfo(wcodes[i]);
-      return `<div style="text-align:center;flex:1;font-size:10px;color:var(--text-muted)">
-        <div style="font-size:18px">${icon}</div>
-        <div>${temps[i]}°</div>
+    iconRow.innerHTML = displaySlots.map((s,i) => {
+      const {icon} = weatherInfo(s.wcode ?? 0);
+      const nowStyle = s.isNow ? 'background:var(--orange-light);border-radius:8px;font-weight:800;' : '';
+      const diff = i > 0 ? Math.abs(s.pressure - displaySlots[i-1].pressure) : 0;
+      const dc = dangerColor(diff);
+      return `<div style="text-align:center;min-width:36px;flex:1;font-size:10px;color:var(--text-muted);${nowStyle}padding:3px 0">
+        <div style="font-size:16px">${s.isNow ? '📍' : icon}</div>
+        <div style="color:${dc.color};font-size:9px;font-weight:700">${dc.emoji}</div>
+        <div style="font-size:9px">${s.temp !== null ? Math.round(s.temp)+'°' : '--'}</div>
+        <div style="font-size:9px;color:${s.isNow?'var(--orange)':'var(--text-muted)';}">${s.label}</div>
       </div>`;
     }).join('');
 
-    // 危険度バー
-    const bar = document.getElementById('forecast-danger-bar');
-    const labelRow = document.getElementById('forecast-danger-labels');
-    bar.innerHTML = dangers.map((diff,i) => {
-      const dc = dangerColor(diff);
-      return `<div style="flex:1;background:${dc.color};opacity:0.85;position:relative;" title="${labels[i]}:${dc.label}"></div>`;
-    }).join('');
-    labelRow.innerHTML = hours.map((h,i) => {
-      const dc = dangerColor(dangers[i]);
-      return `<div style="flex:1;text-align:center;font-size:9px;font-weight:700;color:${dc.color}">${h}時</div>`;
-    }).join('');
+    // グラフ（全スロット・1時間刻み）
+    const pressures = slots.map(s => s.pressure);
+    const labels = slots.map(s => s.isNow ? '▼今' : s.label);
+    const nowIdx = slots.findIndex(s => s.isNow);
+    const minP = Math.min(...pressures) - 2;
+    const maxP = Math.max(...pressures) + 2;
 
-    // グラフ描画
-    const minP = Math.min(...pressures) - 3;
-    const maxP = Math.max(...pressures) + 3;
+    const diffs = slots.map((s,i) => i===0 ? 0 : Math.abs(s.pressure - slots[i-1].pressure));
 
-    // 危険度背景プラグイン
-    const bgPlugin = {
-      id: 'dangerBg',
-      beforeDraw(chart) {
-        const {ctx, chartArea: {left,right,top,bottom,width}, scales: {x,y}} = chart;
-        const segW = width / (hours.length-1);
-        dangers.forEach((diff,i) => {
-          if (i===0) return;
-          const dc = dangerColor(diff);
-          if (dc.label==='安定') return;
-          const x0 = x.getPixelForValue(i-1);
-          const x1 = x.getPixelForValue(i);
-          ctx.save();
-          ctx.fillStyle = dc.bg;
-          ctx.fillRect(x0, top, x1-x0, bottom-top);
-          ctx.restore();
-        });
+    const nowLinePlugin = {
+      id: 'nowLine',
+      afterDraw(chart) {
+        if (nowIdx < 0) return;
+        const {ctx, chartArea:{top,bottom}, scales:{x}} = chart;
+        const xPos = x.getPixelForValue(nowIdx);
+        ctx.save();
+        ctx.strokeStyle = 'var(--orange)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4,3]);
+        ctx.beginPath();
+        ctx.moveTo(xPos, top);
+        ctx.lineTo(xPos, bottom);
+        ctx.stroke();
+        ctx.restore();
       }
     };
 
     if (forecastChart) forecastChart.destroy();
     forecastChart = new Chart(document.getElementById('forecastChart'), {
       type: 'line',
-      plugins: [bgPlugin],
+      plugins: [nowLinePlugin],
       data: {
         labels,
         datasets: [{
           data: pressures,
-          borderColor: '#2a78d6',
-          backgroundColor: 'rgba(42,120,214,0.08)',
-          borderWidth: 2.5,
+          borderColor: ctx => {
+            const i = ctx.p1DataIndex;
+            if (i === undefined) return '#2a78d6';
+            return i <= nowIdx ? '#888' : '#2a78d6';
+          },
+          segment: {
+            borderColor: ctx => ctx.p1DataIndex <= nowIdx ? '#aaa' : '#2a78d6',
+            borderDash: ctx => ctx.p1DataIndex <= nowIdx ? [4,2] : [],
+          },
+          backgroundColor: 'rgba(42,120,214,0.06)',
+          borderWidth: 2,
           tension: 0.4,
-          pointRadius: 5,
-          pointBackgroundColor: pressures.map((_,i) => {
-            const dc = dangerColor(dangers[i]);
-            return dc.color;
+          pointRadius: slots.map(s => s.isNow ? 7 : 2),
+          pointBackgroundColor: slots.map((s,i) => {
+            if (s.isNow) return 'var(--orange)';
+            return dangerColor(diffs[i]).color;
           }),
           pointBorderColor: '#fff',
-          pointBorderWidth: 2
+          pointBorderWidth: 1.5
         }]
       },
       options: {
@@ -689,8 +740,9 @@ async function fetchForecast(lat, lon) {
             callbacks: {
               label: ctx => {
                 const i = ctx.dataIndex;
-                const dc = dangerColor(dangers[i]);
-                return [`${ctx.parsed.y} hPa`, `${dc.label}`];
+                const dc = dangerColor(diffs[i]);
+                const tag = slots[i].isNow ? ' ◀現在' : slots[i].isPast ? ' (過去)' : '';
+                return [`${ctx.parsed.y} hPa${tag}`, dc.label];
               }
             }
           }
@@ -698,19 +750,42 @@ async function fetchForecast(lat, lon) {
         scales: {
           y: {
             min: minP, max: maxP,
-            title: { display: true, text: 'hPa', color: '#2a78d6', font: {size:10} },
+            title: { display: true, text: 'hPa', color: '#2a78d6', font:{size:10} },
             grid: { color: 'rgba(42,120,214,0.08)' },
-            ticks: { color: '#888', font: {size:10} }
+            ticks: { color: '#888', font:{size:10} }
           },
           x: {
             grid: { display: false },
-            ticks: { color: '#888', font: {size:10} }
+            ticks: {
+              color: ctx => slots[ctx.index]?.isNow ? 'var(--orange)' : '#888',
+              font: ctx => ({ size: slots[ctx.index]?.isNow ? 11 : 9,
+                             weight: slots[ctx.index]?.isNow ? '700' : '400' }),
+              autoSkip: true,
+              maxTicksLimit: 10
+            }
           }
         }
       }
     });
+
+    // 危険度バー（3時間刻み）
+    const bar = document.getElementById('forecast-danger-bar');
+    const labelRowEl = document.getElementById('forecast-danger-labels');
+    bar.innerHTML = displaySlots.map((s,i) => {
+      const diff = i===0 ? 0 : Math.abs(s.pressure - displaySlots[i-1].pressure);
+      const dc = dangerColor(diff);
+      const nowStyle = s.isNow ? 'outline:2px solid var(--orange);outline-offset:-2px;' : '';
+      return `<div style="flex:1;background:${dc.color};${nowStyle}" title="${s.label}:${dc.label}"></div>`;
+    }).join('');
+    labelRowEl.innerHTML = displaySlots.map((s,i) => {
+      const diff = i===0 ? 0 : Math.abs(s.pressure - displaySlots[i-1].pressure);
+      const dc = dangerColor(diff);
+      return `<div style="flex:1;text-align:center;font-size:9px;font-weight:${s.isNow?'800':'600'};color:${s.isNow?'var(--orange)':dc.color}">${s.isNow?'今':s.label}</div>`;
+    }).join('');
+
   } catch(e) {
     console.warn('予報取得失敗:', e);
+    document.getElementById('forecast-card').style.display='none';
   }
 }
 
