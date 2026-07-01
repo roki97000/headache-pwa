@@ -677,9 +677,9 @@ async function fetchForecast(lat, lon) {
     };
 
     const dangerColor = diff => {
-      if (diff >= 2)   return { color:'#e03020', label:'警戒',    emoji:'🔴', bg:'rgba(224,48,32,0.12)' };
-      if (diff >= 1.5) return { color:'#b35a00', label:'注意',    emoji:'🟠', bg:'rgba(179,90,0,0.12)' };
-      if (diff >= 0.8) return { color:'#7a6000', label:'やや注意', emoji:'🟡', bg:'rgba(122,96,0,0.10)' };
+      if (diff >= 6)   return { color:'#e03020', label:'警戒',    emoji:'🔴', bg:'rgba(224,48,32,0.12)' };
+      if (diff >= 4)   return { color:'#b35a00', label:'注意',    emoji:'🟠', bg:'rgba(179,90,0,0.12)' };
+      if (diff >= 2)   return { color:'#7a6000', label:'やや注意', emoji:'🟡', bg:'rgba(122,96,0,0.10)' };
       return              { color:'#2e9e50', label:'安定',    emoji:'🟢', bg:'rgba(46,158,80,0.06)' };
     };
 
@@ -954,7 +954,7 @@ async function saveRecord() {
   // 警戒レベルを計算
   if (pressure !== null) {
     const lv = calcAlertLevel(pressure);
-    alertLevel = lv.text.replace(/[⚠🔶🔸✅] */g, '').trim();
+    alertLevel = lv.text.replace(/[⚠🟠🟡🟢✅] */g, '').trim();
   }
 
   const rec = {
