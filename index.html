@@ -671,7 +671,7 @@ async function fetchForecast(lat, lon) {
         <div style="font-size:16px">${s.isNow ? '📍' : icon}</div>
         <div style="color:${dc.color};font-size:9px;font-weight:700">${dc.emoji}</div>
         <div style="font-size:9px">${s.temp !== null ? Math.round(s.temp)+'°' : '--'}</div>
-        <div style="font-size:9px;color:${s.isNow?'var(--orange)':'var(--text-muted)';}">${s.label}</div>
+        <div style="font-size:9px;color:${s.isNow?'var(--orange)':'var(--text-muted)'}">${s.label}</div>
       </div>`;
     }).join('');
 
