@@ -308,6 +308,25 @@ textarea:focus{outline:none;border-color:var(--orange)}
         </div>
         <div class="geo-row"><i class="ti ti-map-pin" style="font-size:12px"></i><span id="geo-text">位置情報を取得中…</span></div>
       </div>
+      <!-- 前後気圧予報カード -->
+      <div class="card" id="forecast-card">
+        <div class="card-title"><i class="ti ti-clock"></i>気圧の推移（過去12時間〜今後24時間）</div>
+        <div id="forecast-icons" style="display:flex;overflow-x:auto;gap:0;margin-bottom:6px;padding-bottom:2px"></div>
+        <div style="position:relative;width:100%;height:150px">
+          <canvas id="forecastChart" role="img" aria-label="気圧推移グラフ">気圧推移</canvas>
+        </div>
+        <div style="margin-top:8px">
+          <div id="forecast-danger-bar" style="display:flex;height:14px;border-radius:6px;overflow:hidden"></div>
+          <div id="forecast-danger-labels" style="display:flex;margin-top:3px"></div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;font-size:10px;font-weight:700">
+          <span style="color:#e03020">🔴 警戒</span>
+          <span style="color:#b35a00">🟠 注意</span>
+          <span style="color:#7a6000">🟡 やや注意</span>
+          <span style="color:#2e9e50">🟢 安定</span>
+          <span style="color:var(--text-muted);margin-left:auto;font-weight:400">▼=現在</span>
+        </div>
+      </div>
     </div><!-- /左カラム -->
     <div><!-- 右カラム：フォーム -->
       <div class="card">
@@ -556,10 +575,12 @@ function renderAlertBar(p) {
 }
 
 function requestGeoAndPressure() {
+  // まずデフォルト値で即座に気象データ取得（位置情報待ちで止まらないように）
+  fetchWeather(34.9565, 137.1651, null);
+  fetchForecast(34.9565, 137.1651);
+
   if (!navigator.geolocation) {
-    document.getElementById('geo-text').textContent = '位置情報非対応 — 岡崎市の値を使用';
-    fetchWeather(34.9565, 137.1651, '岡崎市（デフォルト）');
-    fetchForecast(34.9565, 137.1651);
+    document.getElementById('geo-text').textContent = '岡崎市（デフォルト）';
     return;
   }
   navigator.geolocation.getCurrentPosition(
@@ -567,15 +588,17 @@ function requestGeoAndPressure() {
       const { latitude: lat, longitude: lon } = pos.coords;
       geoCoords = { lat, lon };
       reverseGeocode(lat, lon);
+      // 正確な位置情報で上書き取得
       fetchWeather(lat, lon, null);
       fetchForecast(lat, lon);
     },
-    () => {
-      document.getElementById('geo-text').textContent = '位置情報取得失敗 — 岡崎市の値を使用';
-      fetchWeather(34.9565, 137.1651, '岡崎市（デフォルト）');
+    (err) => {
+      console.warn('位置情報エラー:', err.code, err.message);
+      document.getElementById('geo-text').textContent = 'デフォルト位置を使用（岡崎市）';
+      fetchWeather(34.9565, 137.1651, '岡崎市');
       fetchForecast(34.9565, 137.1651);
     },
-    { timeout: 8000, maximumAge: 300000 }
+    { timeout: 5000, maximumAge: 60000, enableHighAccuracy: false }
   );
 }
 
