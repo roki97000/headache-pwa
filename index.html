@@ -1225,8 +1225,8 @@ function renderLog() {
     const alertEmoji = (level) => {
       if (!level) return '';
       if (level.includes('警戒')) return '🔴 ';
-      if (level.includes('やや注意')) return '🟠 ';
-      if (level.includes('上昇注意')) return '🟡 ';
+      if (level.includes('やや注意')) return '🟡 ';
+      if (level.includes('注意')) return '🟠 ';
       return '🟢 ';
     };
     const pressureHtml = r.pressure
