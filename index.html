@@ -954,7 +954,8 @@ async function saveRecord() {
   // 警戒レベルを計算
   if (pressure !== null) {
     const lv = calcAlertLevel(pressure);
-    alertLevel = lv.text.replace(/[⚠🟠🟡🟢✅] */g, '').trim();
+    // 記号・絵文字を一切含まない純粋なテキストで保存
+    alertLevel = lv.text.replace(/[^\u3040-\u9FFFa-zA-Z0-9]/g, '').trim();
   }
 
   const rec = {
