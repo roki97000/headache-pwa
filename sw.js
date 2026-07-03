@@ -1,4 +1,4 @@
-const CACHE = 'ht-v1';
+const CACHE = 'ht-v2';
 const ASSETS = ['/', '/index.html', '/manifest.json'];
 
 self.addEventListener('install', e => {
@@ -14,9 +14,24 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // 気圧APIはネットワーク優先
-  if (e.request.url.includes('open-meteo.com')) {
+  // 外部APIはネットワーク優先
+  if (e.request.url.includes('open-meteo.com') ||
+      e.request.url.includes('archive-api.open-meteo.com') ||
+      e.request.url.includes('nominatim.openstreetmap.org') ||
+      e.request.url.includes('firestore.googleapis.com') ||
+      e.request.url.includes('firebase')) {
     e.respondWith(fetch(e.request).catch(() => new Response('{}', { headers: { 'Content-Type': 'application/json' } })));
+    return;
+  }
+  // HTMLは常にネットワーク優先（最新版を取得）
+  if (e.request.url.endsWith('.html') || e.request.url.endsWith('/')) {
+    e.respondWith(
+      fetch(e.request).then(res => {
+        const clone = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+        return res;
+      }).catch(() => caches.match(e.request))
+    );
     return;
   }
   e.respondWith(
