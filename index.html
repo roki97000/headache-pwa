@@ -1229,8 +1229,14 @@ function renderLog() {
       if (level.includes('注意')) return '🟠 ';
       return '🟢 ';
     };
+    // Firestoreの古いデータに含まれる絵文字・記号を除去して純粋なテキストにする
+    const cleanLevel = (level) => {
+      if (!level) return null;
+      return level.replace(/[⚠🔶🔸✅🔴🟠🟡🟢◆◇▲△●○■□]/g, '').trim();
+    };
+    const cleanedAlertLevel = cleanLevel(r.alertLevel);
     const pressureHtml = r.pressure
-      ? `気圧：${r.pressure} hPa${r.alertLevel ? ' <span style="font-weight:700;color:'+alertColor(r.alertLevel)+'">'+alertEmoji(r.alertLevel)+r.alertLevel+'</span>' : ''}`
+      ? `気圧：${r.pressure} hPa${cleanedAlertLevel ? ' <span style="font-weight:700;color:'+alertColor(cleanedAlertLevel)+'">'+alertEmoji(cleanedAlertLevel)+cleanedAlertLevel+'</span>' : ''}`
       : null;
     const weatherHtml = r.weatherIcon
       ? `天気：${r.weatherIcon} ${r.weatherDesc||''}${r.weatherTemp ? ' '+r.weatherTemp+'°C' : ''}`
