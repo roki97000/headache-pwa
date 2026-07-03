@@ -490,6 +490,16 @@ textarea:focus{outline:none;border-color:var(--orange)}
           <div style="font-size:13px;color:var(--text-sub);margin-bottom:14px">期間を指定して頭痛記録のレポートを作成します。かかりつけ医への受診時にお使いください。</div>
           <div class="datetime-inputs" style="margin-bottom:12px">
             <div>
+              <div class="flabel">お名前</div>
+              <input type="text" id="pdf-name" placeholder="山田 太郎" style="width:100%;padding:8px 10px;font-size:14px;border:1.5px solid var(--border-strong);border-radius:var(--radius);background:#fff;color:var(--text);font-family:inherit">
+            </div>
+            <div>
+              <div class="flabel">診察券番号</div>
+              <input type="text" id="pdf-patient-id" placeholder="12345" style="width:100%;padding:8px 10px;font-size:14px;border:1.5px solid var(--border-strong);border-radius:var(--radius);background:#fff;color:var(--text);font-family:inherit">
+            </div>
+          </div>
+          <div class="datetime-inputs" style="margin-bottom:12px">
+            <div>
               <div class="flabel">開始日</div>
               <input type="date" id="pdf-start">
             </div>
@@ -1277,6 +1287,13 @@ function deleteRecord(id) {
 
 function updateRecordCount() {
   document.getElementById('record-count').textContent = `現在 ${records.length} 件の記録`;
+  // 名前・診察券番号を復元
+  const savedName = localStorage.getItem('pdf_name');
+  const savedId = localStorage.getItem('pdf_patient_id');
+  const nameEl = document.getElementById('pdf-name');
+  const idEl = document.getElementById('pdf-patient-id');
+  if (nameEl && savedName) nameEl.value = savedName;
+  if (idEl && savedId) idEl.value = savedId;
   // PDF期間のデフォルト：過去30日
   const today = new Date();
   const ago30 = new Date(Date.now() - 29*86400000);
@@ -1286,6 +1303,12 @@ function updateRecordCount() {
   if (ps && !ps.value) ps.value = fmt(ago30);
   if (pe && !pe.value) pe.value = fmt(today);
 }
+
+// 名前・診察券番号の自動保存
+document.addEventListener('input', e => {
+  if (e.target.id === 'pdf-name') localStorage.setItem('pdf_name', e.target.value);
+  if (e.target.id === 'pdf-patient-id') localStorage.setItem('pdf_patient_id', e.target.value);
+});
 
 function generatePDF() {
   const startVal = document.getElementById('pdf-start').value;
@@ -1377,6 +1400,8 @@ function generatePDF() {
 
   const periodStr = `${start.toLocaleDateString('ja-JP')} 〜 ${new Date(endVal).toLocaleDateString('ja-JP')}`;
   const createdStr = new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'});
+  const patientName = document.getElementById('pdf-name')?.value.trim() || '';
+  const patientId = document.getElementById('pdf-patient-id')?.value.trim() || '';
 
   const html = `<!DOCTYPE html>
 <html lang="ja">
@@ -1411,6 +1436,11 @@ function generatePDF() {
 <body>
 <h1>🧠 頭痛記録レポート</h1>
 <div class="meta">集計期間：${periodStr}　／　作成日：${createdStr}　／　対象記録：${headacheCount}件</div>
+${patientName || patientId ? `<div style="margin-bottom:12px;padding:10px 14px;background:#fff8f0;border:1.5px solid #f5c090;border-radius:8px;font-size:12px">
+  ${patientName ? `<span style="font-weight:700">氏名：${patientName}</span>` : ''}
+  ${patientName && patientId ? '　／　' : ''}
+  ${patientId ? `<span style="font-weight:700">診察券番号：${patientId}</span>` : ''}
+</div>` : ''}
 
 <div class="section">
   <div class="section-title">サマリー</div>
