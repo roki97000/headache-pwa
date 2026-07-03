@@ -1232,7 +1232,7 @@ function renderLog() {
     // Firestoreの古いデータに含まれる絵文字・記号を除去して純粋なテキストにする
     const cleanLevel = (level) => {
       if (!level) return null;
-      return level.replace(/[⚠🔶🔸✅🔴🟠🟡🟢◆◇▲△●○■□]/g, '').trim();
+      return level.replace(/[^\u3000-\u9FFF\u30A0-\u30FF\u3040-\u309F\uFF00-\uFFEF\u4E00-\u9FAFa-zA-Z0-9]/g, '').trim();
     };
     const cleanedAlertLevel = cleanLevel(r.alertLevel);
     const pressureHtml = r.pressure
