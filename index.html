@@ -1315,9 +1315,9 @@ function generatePDF() {
   const endVal   = document.getElementById('pdf-end').value;
   if (!startVal || !endVal) { showToast('期間を指定してください'); return; }
 
-  const start = new Date(startVal);
-  const end   = new Date(endVal);
-  end.setHours(23,59,59,999);
+  // JST基準で期間を設定（UTC-9時間のオフセットを考慮）
+  const start = new Date(startVal + 'T00:00:00+09:00');
+  const end   = new Date(endVal   + 'T23:59:59+09:00');
   if (start > end) { showToast('開始日が終了日より後になっています'); return; }
 
   const filtered = records.filter(r => {
