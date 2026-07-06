@@ -1354,7 +1354,7 @@ function generatePDF() {
   }).join('');
 
   // 記録一覧HTML
-  const rows = filtered.slice().reverse().map(r => {
+  const rows = filtered.slice().sort((a,b) => new Date(a.datetime) - new Date(b.datetime)).map(r => {
     const dt = new Date(r.datetime);
     const ds = dt.toLocaleDateString('ja-JP',{year:'numeric',month:'numeric',day:'numeric',weekday:'short'})
              + ' ' + dt.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
