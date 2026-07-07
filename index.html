@@ -698,7 +698,9 @@ async function fetchForecast(lat, lon) {
     iconRow.innerHTML = displaySlots.map((s,i) => {
       const {icon} = weatherInfo(s.wcode ?? 0);
       const nowStyle = s.isNow ? 'background:var(--orange-light);border-radius:8px;font-weight:800;' : '';
-      const diff = i > 0 ? Math.abs(s.pressure - displaySlots[i-1].pressure) : 0;
+      // 3時間前との差分で危険度計算
+      const past3Slot = displaySlots[Math.max(0, i-1)];
+      const diff = i > 0 ? Math.abs(s.pressure - past3Slot.pressure) : 0;
       const dc = dangerColor(diff);
       return `<div style="text-align:center;min-width:36px;flex:1;font-size:10px;color:var(--text-muted);${nowStyle}padding:3px 0">
         <div style="font-size:16px">${s.isNow ? '📍' : icon}</div>
@@ -715,7 +717,11 @@ async function fetchForecast(lat, lon) {
     const minP = Math.min(...pressures) - 2;
     const maxP = Math.max(...pressures) + 2;
 
-    const diffs = slots.map((s,i) => i===0 ? 0 : Math.abs(s.pressure - slots[i-1].pressure));
+    // 3時間前との差分で危険度計算（より正確）
+    const diffs = slots.map((s,i) => {
+      const past3 = slots[Math.max(0, i-3)];
+      return Math.abs(s.pressure - past3.pressure);
+    });
 
     const nowLinePlugin = {
       id: 'nowLine',
@@ -805,13 +811,13 @@ async function fetchForecast(lat, lon) {
     const bar = document.getElementById('forecast-danger-bar');
     const labelRowEl = document.getElementById('forecast-danger-labels');
     bar.innerHTML = displaySlots.map((s,i) => {
-      const diff = i===0 ? 0 : Math.abs(s.pressure - displaySlots[i-1].pressure);
+      const diff = i===0 ? 0 : Math.abs(s.pressure - displaySlots[Math.max(0,i-1)].pressure);
       const dc = dangerColor(diff);
       const nowStyle = s.isNow ? 'outline:2px solid var(--orange);outline-offset:-2px;' : '';
       return `<div style="flex:1;background:${dc.color};${nowStyle}" title="${s.label}:${dc.label}"></div>`;
     }).join('');
     labelRowEl.innerHTML = displaySlots.map((s,i) => {
-      const diff = i===0 ? 0 : Math.abs(s.pressure - displaySlots[i-1].pressure);
+      const diff = i===0 ? 0 : Math.abs(s.pressure - displaySlots[Math.max(0,i-1)].pressure);
       const dc = dangerColor(diff);
       return `<div style="flex:1;text-align:center;font-size:9px;font-weight:${s.isNow?'800':'600'};color:${s.isNow?'var(--orange)':dc.color}">${s.isNow?'今':s.label}</div>`;
     }).join('');
