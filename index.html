@@ -282,7 +282,7 @@ textarea:focus{outline:none;border-color:var(--orange)}
     <div><!-- 左カラム：気象 -->
 
       <div class="card">
-        <div class="card-title"><i class="ti ti-cloud-storm"></i>いまの気象</div>
+        <div class="card-title"><i class="ti ti-cloud-storm"></i>いまの気象<span style="font-size:10px;font-weight:400;color:var(--text-muted);margin-left:auto">今の状態を確認</span></div>
         <div class="meteo-grid">
           <div class="meteo-block meteo-block-pressure">
             <div class="meteo-label">気圧</div>
@@ -310,7 +310,7 @@ textarea:focus{outline:none;border-color:var(--orange)}
       </div>
       <!-- 前後気圧予報カード -->
       <div class="card" id="forecast-card">
-        <div class="card-title"><i class="ti ti-clock"></i>気圧の推移（過去12時間〜今後24時間）</div>
+        <div class="card-title"><i class="ti ti-clock"></i>気圧の推移（過去12時間〜今後24時間）<span style="font-size:10px;font-weight:400;color:var(--text-muted);margin-left:auto">今後の予測</span></div>
         <div id="forecast-icons" style="display:flex;overflow-x:auto;gap:0;margin-bottom:6px;padding-bottom:2px"></div>
         <div style="position:relative;width:100%;height:150px">
           <canvas id="forecastChart" role="img" aria-label="気圧推移グラフ">気圧推移</canvas>
