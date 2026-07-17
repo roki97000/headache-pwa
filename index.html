@@ -528,7 +528,7 @@ textarea:focus{outline:none;border-color:var(--orange)}
           <div class="card-title"><i class="ti ti-info-circle"></i>このアプリについて</div>
           <div class="settings-row"><div><div class="settings-label">気圧・天気データ</div><div class="settings-sub">Open-Meteo（無料・登録不要）</div></div></div>
           <div class="settings-row"><div><div class="settings-label">データ保存場所</div><div class="settings-sub">Firebase（Googleクラウド・東京）</div></div></div>
-          <div class="settings-row"><div><div class="settings-label">バージョン</div><div class="settings-sub">1.6.0</div></div></div>
+          <div class="settings-row"><div><div class="settings-label">バージョン</div><div class="settings-sub">1.7.0</div></div></div>
         </div>
       </div>
     </div>
@@ -1480,9 +1480,59 @@ ${patientName || patientId ? `<div style="margin-bottom:12px;padding:10px 14px;b
   </table>
 </div>
 
+<div class="section">
+  <div class="section-title">📅 月別カレンダー</div>
+  <div class="cal-months">
+    \${calendarHTML}
+  </div>
+</div>
 <div class="footer">頭痛きろく アプリ by MH_TRACE — このレポートはご自身の記録データから自動生成されました</div>
 </body>
 </html>`;
+
+  // カレンダー生成
+  const calMonths = {};
+  filtered.forEach(r => {
+    const d = new Date(r.datetime);
+    const key = d.getFullYear() + '-' + d.getMonth();
+    if (!calMonths[key]) calMonths[key] = { year: d.getFullYear(), month: d.getMonth(), records: {} };
+    const day = d.getDate();
+    if (!calMonths[key].records[day]) calMonths[key].records[day] = [];
+    calMonths[key].records[day].push(r);
+  });
+
+  const weekDays = ['日','月','火','水','木','金','土'];
+  const calendarHTML = Object.values(calMonths).sort((a,b) => {
+    if (a.year !== b.year) return a.year - b.year;
+    return a.month - b.month;
+  }).map(({year, month, records}) => {
+    const monthName = year + '年' + (month+1) + '月';
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month+1, 0).getDate();
+    const painFaceMap = { mild:'😐', moderate:'😣', severe:'😫' };
+    let cells = '<div class="cal-grid">';
+    const headColors = ['color:#e03020','','','','','','color:#2a78d6'];
+    weekDays.forEach((d,i) => {
+      cells += '<div class="cal-head" style="' + headColors[i] + '">' + d + '</div>';
+    });
+    for (let i=0; i<firstDay; i++) cells += '<div></div>';
+    for (let d=1; d<=daysInMonth; d++) {
+      const recs = records[d] || [];
+      let cls = '';
+      let icon = '';
+      if (recs.length) {
+        const worst = recs.some(r=>r.pain==='severe') ? 'severe'
+                    : recs.some(r=>r.pain==='moderate') ? 'moderate' : 'mild';
+        cls = 'cal-' + worst;
+        icon = '<div class="cal-day-icon">' + painFaceMap[worst] + '</div>';
+      }
+      const dow = (firstDay + d - 1) % 7;
+      const numColor = dow===0?'color:#e03020':dow===6?'color:#2a78d6':'';
+      cells += '<div class="cal-day ' + cls + '"><div class="cal-day-num" style="' + numColor + '">' + d + '</div>' + icon + '</div>';
+    }
+    cells += '</div>';
+    return '<div><div style="font-size:12px;font-weight:700;color:#e8630a;margin-bottom:4px">' + monthName + '</div>' + cells + '</div>';
+  }).join('');
 
   // 印刷ウィンドウで開く
   const win = window.open('', '_blank');
